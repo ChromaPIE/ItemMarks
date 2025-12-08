@@ -53,38 +53,71 @@ public class MarkRegistry {
     public static String getMark(ItemStack stack) {
         if (stack == null || stack.getItem() == null) return null;
         String itemId = Item.itemRegistry.getNameForObject(stack.getItem());
-        if (itemId == null) return null;
         int meta = stack.getItemDamage();
         NBTTagCompound nbt = stack.getTagCompound();
+
+        // Priority 1: Item + NBT + Meta
         for (MarkEntry entry : entries) {
-            if (!itemId.equals(entry.getItemId())) continue;
+            if (!entry.hasItemCondition()) continue;
+            if (itemId == null || !itemId.equals(entry.getItemId())) continue;
             if (entry.hasNbtCondition() && entry.hasMetaCondition()) {
                 if (entry.getMeta() == meta && nbt != null && matchNbt(nbt, entry.getNbtPath(), entry.getNbtValue())) {
                     return entry.getMark();
                 }
             }
         }
+
+        // Priority 2: Item + NBT (any meta)
         for (MarkEntry entry : entries) {
-            if (!itemId.equals(entry.getItemId())) continue;
+            if (!entry.hasItemCondition()) continue;
+            if (itemId == null || !itemId.equals(entry.getItemId())) continue;
             if (entry.hasNbtCondition() && !entry.hasMetaCondition()) {
                 if (nbt != null && matchNbt(nbt, entry.getNbtPath(), entry.getNbtValue())) {
                     return entry.getMark();
                 }
             }
         }
+
+        // Priority 3: Item + Meta (no NBT)
         for (MarkEntry entry : entries) {
-            if (!itemId.equals(entry.getItemId())) continue;
+            if (!entry.hasItemCondition()) continue;
+            if (itemId == null || !itemId.equals(entry.getItemId())) continue;
             if (!entry.hasNbtCondition() && entry.hasMetaCondition()) {
                 if (entry.getMeta() == meta) {
                     return entry.getMark();
                 }
             }
         }
+
+        // Priority 4: Item only (no NBT, no meta)
         for (MarkEntry entry : entries) {
-            if (itemId.equals(entry.getItemId()) && !entry.hasNbtCondition() && !entry.hasMetaCondition()) {
+            if (!entry.hasItemCondition()) continue;
+            if (itemId == null || !itemId.equals(entry.getItemId())) continue;
+            if (!entry.hasNbtCondition() && !entry.hasMetaCondition()) {
                 return entry.getMark();
             }
         }
+
+        // Priority 5: NBT + Meta only (no item)
+        for (MarkEntry entry : entries) {
+            if (entry.hasItemCondition()) continue;
+            if (entry.hasNbtCondition() && entry.hasMetaCondition()) {
+                if (entry.getMeta() == meta && nbt != null && matchNbt(nbt, entry.getNbtPath(), entry.getNbtValue())) {
+                    return entry.getMark();
+                }
+            }
+        }
+
+        // Priority 6: NBT only (no item, no meta)
+        for (MarkEntry entry : entries) {
+            if (entry.hasItemCondition()) continue;
+            if (entry.hasNbtCondition() && !entry.hasMetaCondition()) {
+                if (nbt != null && matchNbt(nbt, entry.getNbtPath(), entry.getNbtValue())) {
+                    return entry.getMark();
+                }
+            }
+        }
+
         return null;
     }
 
@@ -130,8 +163,7 @@ public class MarkRegistry {
             String indexPart = remaining.substring(1, closeIdx);
             remaining = remaining.substring(closeIdx + 1);
             if (remaining.startsWith(".")) remaining = remaining.substring(1);
-            if (!(current instanceof NBTTagList)) return false;
-            NBTTagList list = (NBTTagList) current;
+            if (!(current instanceof NBTTagList list)) return false;
             if ("*".equals(indexPart)) {
                 for (int i = 0; i < list.tagCount(); i++) {
                     if (matchNbtRecursive(list.getCompoundTagAt(i), remaining, value)) {
@@ -145,8 +177,7 @@ public class MarkRegistry {
                 return matchNbtRecursive(list.getCompoundTagAt(idx), remaining, value);
             }
         }
-        if (!(current instanceof NBTTagCompound)) return false;
-        NBTTagCompound compound = (NBTTagCompound) current;
+        if (!(current instanceof NBTTagCompound compound)) return false;
         if (!compound.hasKey(segment)) {
             return "!".equals(value) && remaining.isEmpty();
         }

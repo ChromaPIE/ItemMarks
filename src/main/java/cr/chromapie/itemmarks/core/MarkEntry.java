@@ -48,6 +48,10 @@ public class MarkEntry {
         return meta >= 0;
     }
 
+    public boolean hasItemCondition() {
+        return itemId != null && !itemId.isEmpty();
+    }
+
     public String getNbtPath() {
         return nbtPath;
     }
@@ -95,7 +99,7 @@ public class MarkEntry {
         int meta = 0;
         int lastColon = itemIdRaw.lastIndexOf(':');
         int firstColon = itemIdRaw.indexOf(':');
-        if (lastColon > firstColon && lastColon != -1) {
+        if (lastColon > firstColon) {
             String metaPart = itemIdRaw.substring(lastColon + 1);
             itemId = itemIdRaw.substring(0, lastColon);
             if ("*".equals(metaPart)) {
@@ -105,7 +109,6 @@ public class MarkEntry {
                     meta = Integer.parseInt(metaPart);
                 } catch (NumberFormatException e) {
                     itemId = itemIdRaw;
-                    meta = 0;
                 }
             }
         } else {

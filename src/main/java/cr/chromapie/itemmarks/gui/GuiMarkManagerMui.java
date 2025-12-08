@@ -172,7 +172,12 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     }
 
     private IWidget buildEntryRow(MarkEntry entry, int index) {
-        String text = String.format("[%s] %s", entry.getMark(), formatItemId(entry));
+        String text;
+        if (entry.hasItemCondition()) {
+            text = String.format("[%s] %s", entry.getMark(), formatItemId(entry));
+        } else {
+            text = String.format("[%s] §7*", entry.getMark());
+        }
         if (entry.hasNbtCondition()) {
             String path = entry.getNbtPath();
             if (path == null || path.isEmpty()) {
@@ -253,11 +258,12 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     }
 
     public void onEditorConfirm(int editIndex, String mark, String itemIdRaw, String nbtPath, String nbtValue) {
-        if (mark.isEmpty() || itemIdRaw.isEmpty()) return;
-
-        ParsedItemId parsed = parseItemId(itemIdRaw);
+        if (mark.isEmpty()) return;
         if (nbtPath != null && nbtPath.isEmpty()) nbtPath = null;
         if (nbtValue != null && nbtValue.isEmpty()) nbtValue = null;
+        if (itemIdRaw.isEmpty() && nbtValue == null) return;
+
+        ParsedItemId parsed = parseItemId(itemIdRaw);
 
         MarkEntry entry = new MarkEntry(mark, parsed.itemId, parsed.meta, nbtPath, nbtValue);
 
@@ -292,7 +298,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     private ParsedItemId parseItemId(String raw) {
         int lastColon = raw.lastIndexOf(':');
         int firstColon = raw.indexOf(':');
-        if (lastColon > firstColon && lastColon != -1) {
+        if (lastColon > firstColon) {
             String metaPart = raw.substring(lastColon + 1);
             String itemId = raw.substring(0, lastColon);
             if ("*".equals(metaPart)) {
@@ -454,7 +460,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
                 boolean enabled = GuiHelper.heldItemHasNbt();
                 return enabled ? nbtText : "§7" + nbtText;
             }));
-            nbtBtn.onUpdateListener(btn -> { GuiHelper.applyButtonStyle(btn, GuiHelper.heldItemHasNbt()); }, true);
+            nbtBtn.onUpdateListener(btn -> GuiHelper.applyButtonStyle(btn, GuiHelper.heldItemHasNbt()), true);
             nbtBtn.onMousePressed(btn -> {
                 if (!GuiHelper.heldItemHasNbt()) return true;
                 openNbtEditor();
@@ -479,21 +485,23 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             confirmBtn.size(60, 18);
             final String confirmText = StatCollector.translateToLocal("itemmarks.editor.confirm");
             confirmBtn.overlay(IKey.dynamic(() -> {
-                boolean enabled = !markField.getText()
-                    .trim()
-                    .isEmpty()
-                    && !itemIdField.getText()
-                        .trim()
-                        .isEmpty();
+                String mark = markField.getText()
+                    .trim();
+                String itemId = itemIdField.getText()
+                    .trim();
+                String nbtVal = nbtValueField.getText()
+                    .trim();
+                boolean enabled = !mark.isEmpty() && (!itemId.isEmpty() || !nbtVal.isEmpty());
                 return enabled ? "§a" + confirmText : "§7" + confirmText;
             }));
             confirmBtn.onUpdateListener(btn -> {
-                boolean enabled = !markField.getText()
-                    .trim()
-                    .isEmpty()
-                    && !itemIdField.getText()
-                        .trim()
-                        .isEmpty();
+                String mark = markField.getText()
+                    .trim();
+                String itemId = itemIdField.getText()
+                    .trim();
+                String nbtVal = nbtValueField.getText()
+                    .trim();
+                boolean enabled = !mark.isEmpty() && (!itemId.isEmpty() || !nbtVal.isEmpty());
                 GuiHelper.applyButtonStyle(btn, enabled);
             }, true);
             confirmBtn.onMousePressed(btn -> {
@@ -501,12 +509,12 @@ public class GuiMarkManagerMui extends CustomModularScreen {
                     .trim();
                 String itemId = itemIdField.getText()
                     .trim();
-                if (mark.isEmpty() || itemId.isEmpty()) return true;
+                String nbtVal = nbtValueField.getText()
+                    .trim();
+                if (mark.isEmpty() || (itemId.isEmpty() && nbtVal.isEmpty())) return true;
                 String nbtPath = nbtPathField.getText()
                     .trim();
-                String nbtValue = nbtValueField.getText()
-                    .trim();
-                parent.onEditorConfirm(editIndex, mark, itemId, nbtPath, nbtValue);
+                parent.onEditorConfirm(editIndex, mark, itemId, nbtPath, nbtVal);
                 closeIfOpen();
                 return true;
             });
