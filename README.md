@@ -1,88 +1,214 @@
-# Example Forge Mod for Minecraft 1.7.10
+# Item Marks
 
-[![](https://jitpack.io/v/GTNewHorizons/ExampleMod1.7.10.svg)](https://jitpack.io/#GTNewHorizons/ExampleMod1.7.10)
-[![](https://github.com/GTNewHorizons/ExampleMod1.7.10/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/GTNewHorizons/ExampleMod1.7.10/actions/workflows/build-and-test.yml)
+A Minecraft 1.7.10 mod that allows players to display custom marks on item icons for quick identification of specific items.
 
-An example mod for Minecraft 1.7.10 with Forge focussed on a stable, updatable setup.
+## Features
 
-### Motivation
+- Render 1-2 character custom marks on item icons
+- Match items by Item ID, metadata (Meta), and NBT data
+- Support NBT-only matching (no Item ID required) to match different items with the same NBT structure
+- Visual GUI management interface
+- Configurable mark position and size
 
-We had our fair share in struggles with build scripts for Minecraft Forge. There are quite a few pitfalls from non-obvious error messages. This Example Project provides you a build system you can adapt to over 90% of Minecraft Forge mods and can easily be updated if need be.
+## Installation
 
-### Help! I'm stuck!
+1. Ensure Minecraft Forge 1.7.10 is installed
+2. Ensure [ModularUI2](https://github.com/GTNewHorizons/ModularUI2) dependency is installed
+3. Place the mod JAR file into the `mods` folder
 
-We all have been there! Check out our [FAQ](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/docs/FAQ.md). If that doesn't help, please open an issue.
+## Usage
 
-### Getting started
+### Opening the Manager
 
-Creating mod from scratch:
-1. Unzip [project starter](https://github.com/GTNewHorizons/ExampleMod1.7.10/releases/download/master-packages/starter.zip) into project directory.
-2. Replace placeholders in LICENSE-template and rename it to LICENSE, or remove LICENSE-template and put any other license you like on your code. This is an permissive OSS project and we encourage you participate in OSS movement by having permissive license like one in template. You can find out pros and cons of OSS software in [this article](https://www.freecodecamp.org/news/what-is-great-about-developing-open-source-and-what-is-not/)
-3. Ensure your project is under VCS. For example initialise git repository by running `git init; git commit --message "initialized repository"`.
-4. Replace placeholders (edit values in gradle.properties, change example package and class names, etc.)
-5. Run `./gradlew build`
-6. Make sure to check out the rest sections of this file.
-7. You are good to go!
+Press **M** key (configurable in Controls settings) to open the Item Marks Manager.
 
-We also have described guidelines for existing mod [migration](docs/migration.md) and [porting](docs/porting.md)
+### Manager Interface Layout
 
-### Features
+```
+┌──────────────────────────────────────────┐
+│ [C]      Item Marks Manager      [R] │
+├──────────────────────────────────────────┤
+│                                      │
+│  Entry List                          │
+│  [Mark] ItemID:Meta {NBT Condition}  │
+│                                      │
+├──────────────────────────────────────────┤
+│ [Add] [From Hand] [Delete]       [?] │
+└──────────────────────────────────────────┘
+```
 
- - Updatable: Replace [`build.gradle`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/build.gradle) with a newer version
- - Optional API artifact (.jar)
- - Optional version replacement in Java files
- - Optional shadowing of dependencies
- - Simplified setup of Mixin and example
- - Scala support (add sources under `src/main/scala/` instead of `src/main/java/`)
- - Optional named developer account for consistent player progression during testing
- - Boilerplate forge mod as starting point
- - Improved warnings for pitfalls
- - Git Tags integration for versioning
- - [Jitpack](https://jitpack.io) CI
- - GitHub CI:
-   - Releasing your artifacts on new tags pushed. Push git tag named after version (e.g. 1.0.0) which will trigger a release of artifacts with according names.
-   - Running smoke test for server startup. On any server crash occurring workflow will fail and print the crash log.
+- **C Button**: Open configuration panel
+- **R Button**: Reset all entries (requires confirmation)
+- **Add**: Create a new mark entry
+- **From Hand**: Get Item ID from held item and create new entry
+- **Delete**: Delete selected entry
+- **[?]**: Display help tooltip
 
-### Files
- - [`build.gradle`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/build.gradle): This is the core script of the build process. You should not need to tamper with it, unless you are trying to accomplish something out of the ordinary. __Do not touch this file! You will make a future update near impossible if you do so!__
- - [`gradle.properties`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/gradle.properties): The core configuration file. It includes
- - [`dependencies.gradle[.kts]`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/dependencies.gradle): Add your mod's dependencies in this file. This is separate from the main build script, so you may replace the [`build.gradle`](https://github.com/SinTh0r4s/ExampleMod1.7.10/blob/main/build.gradle) if an update is available.
- - [`repositories.gradle[.kts]`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/repositories.gradle): Add your dependencies' repositories. This is separate from the main build script, so you may replace the [`build.gradle`](https://github.com/SinTh0r4s/ExampleMod1.7.10/blob/main/build.gradle) if an update is available.
- - [`jitpack.yml`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/jitpack.yml): Ensures that your mod is available as import over [Jitpack](https://jitpack.io).
- - [`.github/workflows/gradle.yml`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/.github/workflows/gradle.yml): A simple CI script that will build your mod any time it is pushed to `master` or `main` and publish the result as release in your repository. This feature is free with GitHub if your repository is public.
+### Entry List Operations
 
-### Forge's Access Transformers
+- **Left-click**: Select entry
+- **Right-click**: Edit entry
 
-You may activate Forge's Access Transformers by defining a configuration file in `gradle.properties`.
+## Entry Editor
 
-Check out the [`example-access-transformers`](https://github.com/GTNewHorizons/ExampleMod1.7.10/tree/example-access-transformers) branch for a working example!
+### Field Descriptions
 
-__Warning:__ Access Transformers are bugged and will deny you any sources for the decompiled minecraft! Your development environment will still work, but you might face some inconveniences. For example, IntelliJ will not permit searches in dependencies without attached sources.
+| Field         | Description                          | Examples                  |
+|---------------|--------------------------------------|---------------------------|
+| **Mark**      | 1-2 characters displayed on the item | `A`, `★`, `01`            |
+| **Item ID**   | Minecraft item registry name         | `minecraft:diamond_sword` |
+| **NBT Path**  | Path to access NBT data              | `tag.display.Name`        |
+| **NBT Value** | Expected value to match              | `123`, `*`, `!`           |
 
-### Mixins
+### Item ID Format
 
-[Mixins](https://github.com/SpongePowered/Mixin) are used to modify vanilla or mod/library code during runtime without having to edit, recompile, and redistribute the original code. For example, mixins can change a hardcoded value, redirect a method call, inject additional code, access private fields/methods, make a class implement your interface, and more. Mixins are an advanced feature which most normal mods will not require.
+| Format          | Description                             |
+|-----------------|-----------------------------------------|
+| `modid:item`    | Match item with metadata 0              |
+| `modid:item:16` | Match item with metadata 16             |
+| `modid:item:*`  | Match item with any metadata            |
+| *(empty)*       | No item restriction (NBT-only matching) |
 
-Documentation about Mixin features can be found here: [Mixin Wiki](https://github.com/SpongePowered/Mixin/wiki) and [MixinExtras Wiki](https://github.com/LlamaLad7/MixinExtras/wiki)
+### NBT Path Syntax
 
-There are many examples of mixins in these mods: [Hodgepodge](https://github.com/GTNewHorizons/Hodgepodge) and [Angelica](https://github.com/GTNewHorizons/Angelica)
+| Syntax    | Description                            | Example        |
+|-----------|----------------------------------------|----------------|
+| `key`     | Direct access to root-level key        | `Damage`       |
+| `key.sub` | Access nested key                      | `display.Name` |
+| `list[0]` | Access first element of list           | `ench[0]`      |
+| `list[*]` | Match any element in list              | `ench[*]`      |
+| *(empty)* | Multi-condition matching at root level | -              |
 
-To enable Mixins in your project, follow one of the example commits:
-- use [normal mixins](https://github.com/GTNewHorizons/ExampleMod1.7.10/commit/beba55615fa8337b7639f0d5b18db6cc8d4826be) for basic and quick registration
-- use [GTNH IMixins](https://github.com/GTNewHorizons/ExampleMod1.7.10/commit/055cd4f18765a421a86c706f53b62116988297e3) (recommended) for the same thing as below, but in a less verbose and more unified manner using the IMixins api
-- use [GTNH Early/Late mixins](https://github.com/GTNewHorizons/ExampleMod1.7.10/commit/c4df59d92164775b69451f3e690239e93d1fc979) to have full control over the registration logic and check for presence of other mods during runtime to load your mixins
+### NBT Value Matching
 
-The extra required dependencies are handled automatically after mixins are enabled.
+| Value     | Description                                                    |
+|-----------|----------------------------------------------------------------|
+| `123`     | Exact match (auto-strips type suffixes s/b/l/f/d)              |
+| `*`       | Match if field exists                                          |
+| `!`       | Match if field does not exist                                  |
+| `a=1&b=2` | Multi-condition matching (at root level or when path is empty) |
 
-### Advanced
+### NBT Picker
 
-If your project requires custom gradle commands you may add a `addon.gradle[.kts]` to your project. It will be added automatically to the build script. Although we recommend against it, it is sometimes required. When in doubt, feel free to ask us about it. You may break future updates of this build system!
-If you need access to properties modified later in the buildscript, you can also use a `addon.late.gradle[.kts]`.
-For local tweaks that you don't want to commit to Git, like adding extra JVM arguments for testing, use `addon[.late].local.gradle[.kts]`.
+Click **NBT...** button to open the NBT Picker (requires holding an item with NBT data):
 
-### Feedback wanted
+- Visual display of item's NBT structure
+- Click `[+]/[-]` to expand/collapse compound tags
+- After selecting a field, choose:
+  - **= Value**: Match the field's current value
+  - **Exists (\*)**: Match if field exists
+  - **Not (!)**: Match if field does not exist
 
-If you tried out this build script we would love to head your opinion! Is there any feature missing for you? Did something not work? Please open an issue and we will try to resolve it asap!
+The NBT Picker is draggable and does not block interaction with the editor window below.
 
-Happy modding, \
-[SinTh0r4s](https://github.com/SinTh0r4s), [TheElan](https://github.com/TheElan) and [basdxz](https://github.com/basdxz)
+## Configuration
+
+Click the **C** button in the manager to open the configuration panel:
+
+| Option            | Description                     | Default  |
+|-------------------|---------------------------------|----------|
+| **Display Marks** | Enable/disable mark rendering   | ON       |
+| **Mark Position** | Position of mark on item icon   | Top Left |
+| **Mark Scale**    | Scale ratio of marks (50%-300%) | 100%     |
+
+### Mark Position Options
+
+- **Top Left**: Mark displays at top-left corner of item icon
+- **Top Right**: Mark displays at top-right corner of item icon
+- **Bottom Left**: Mark displays at bottom-left corner of item icon
+- **Middle**: Mark displays at center of item icon
+
+## Match Priority
+
+When multiple entries could match the same item, the following priority is used:
+
+1. **Item + NBT + Meta** (most specific)
+2. **Item + NBT** (any metadata)
+3. **Item + Meta** (no NBT condition)
+4. **Item only** (no NBT, no meta restriction)
+5. **NBT + Meta** (no item restriction)
+6. **NBT only** (no item, no meta restriction)
+
+## Configuration Files
+
+Mod configuration is stored in the Minecraft config directory:
+
+| File                    | Content                                       |
+|-------------------------|-----------------------------------------------|
+| `itemmarks.txt`         | Mark entry data                               |
+| `itemmarks_config.json` | Mod settings (position, scale, enabled state) |
+
+### Entry File Format
+
+One entry per line, format:
+```
+Mark|ItemID:Meta|NBTPath|NBTValue
+```
+
+Examples:
+```
+★|minecraft:diamond_sword:*||
+A|minecraft:potion:0|Potion|minecraft:strength
+!|gtceu:electric_item:*|Charge|!
+```
+
+## Usage Examples
+
+### Example 1: Mark All Diamond Swords
+
+- Mark: `◇`
+- Item ID: `minecraft:diamond_sword:*`
+- NBT Path: *(empty)*
+- NBT Value: *(empty)*
+
+### Example 2: Mark Enchanted Items
+
+- Mark: `E`
+- Item ID: *(empty)*
+- NBT Path: `ench`
+- NBT Value: `*`
+
+### Example 3: Mark Specific Potion
+
+- Mark: `S`
+- Item ID: `minecraft:potion:0`
+- NBT Path: `Potion`
+- NBT Value: `minecraft:strength`
+
+### Example 4: Mark Uncharged Electric Items
+
+- Mark: `!`
+- Item ID: *(empty)*
+- NBT Path: `Charge`
+- NBT Value: `!`
+
+### Example 5: Multi-Condition Matching
+
+- Mark: `OK`
+- Item ID: `modid:machine:0`
+- NBT Path: *(empty)*
+- NBT Value: `active=1&energy=*`
+
+## Key Bindings
+
+| Action          | Function               | Default |
+|-----------------|------------------------|---------|
+| Open Item Marks | Open manager interface | M       |
+
+Configurable in Game Settings → Controls → Item Marks category.
+
+## Dependencies
+
+- Minecraft 1.7.10
+- Forge
+- ModularUI2
+
+## License
+
+MIT
+
+## Credits
+
+- [ModularUI2](https://github.com/GTNewHorizons/ModularUI2) - GUI framework
+- [SpongePowered Mixin](https://github.com/SpongePowered/Mixin) - Code injection framework
+- Claude. Most importantly. - Passed the VIBE check. Love you man.
