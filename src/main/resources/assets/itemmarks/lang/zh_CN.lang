@@ -1,0 +1,59 @@
+# Key Bindings
+key.itemmarks.opengui=打开物品标记管理界面
+key.categories.itemmarks=物品标记
+
+# Main GUI
+itemmarks.gui.title=管理物品标记
+itemmarks.gui.add=添加
+itemmarks.gui.fromhand=获取手持
+itemmarks.gui.delete=删除
+
+# Help Tooltip
+itemmarks.help.leftclick=§e左键§7 选择条目
+itemmarks.help.rightclick=§e右键§7 编辑条目
+itemmarks.help.itemid=§e=== 物品 ID ===
+itemmarks.help.nbtpath=§e=== NBT 路径 ===
+itemmarks.help.nbtvalue=§e=== NBT 值 ===
+
+# Entry Editor
+itemmarks.editor.add=添加条目
+itemmarks.editor.edit=编辑条目
+itemmarks.editor.mark=标记：
+itemmarks.editor.itemid=物品ID：
+itemmarks.editor.nbtpath=NBT路径：
+itemmarks.editor.value=值：
+itemmarks.editor.nbt=NBT…
+itemmarks.editor.cancel=取消
+itemmarks.editor.confirm=确认
+
+# NBT Editor
+itemmarks.nbt.title=NBT选取器
+itemmarks.nbt.selected=§e已选: §f%s
+itemmarks.nbt.selecthint=§7点击NBT字段以选择
+itemmarks.nbt.eqvalue== 值
+itemmarks.nbt.exists=存在 (*)
+itemmarks.nbt.notexists=不存在 (!)
+itemmarks.nbt.expandhint=§8点击 §7[+]/[-]§8 展开/折叠
+itemmarks.nbt.overwrite.title=§e覆盖NBT？
+itemmarks.nbt.overwrite.message=§7NBT字段已有内容
+itemmarks.nbt.overwrite.confirm=§e覆盖
+
+# Reset Confirmation
+itemmarks.reset.title=§c重置所有标记？
+itemmarks.reset.message=§7所有条目均将被清空！
+itemmarks.reset.confirm=§c确认
+
+# Configuration
+itemmarks.config.title=配置
+itemmarks.config.enabled=显示标记：
+itemmarks.config.on=开启
+itemmarks.config.off=关闭
+itemmarks.config.position=标记位置：
+itemmarks.config.scale=标记大小：
+itemmarks.config.close=关闭
+
+# Position Names
+itemmarks.position.topleft=左上
+itemmarks.position.topright=右上
+itemmarks.position.bottomleft=左下
+itemmarks.position.middle=中间

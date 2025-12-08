@@ -1,0 +1,59 @@
+# Key Bindings
+key.itemmarks.opengui=Open Item Marks
+key.categories.itemmarks=Item Marks
+
+# Main GUI
+itemmarks.gui.title=Item Marks Manager
+itemmarks.gui.add=Add
+itemmarks.gui.fromhand=From Hand
+itemmarks.gui.delete=Delete
+
+# Help Tooltip
+itemmarks.help.leftclick=§eLeft-click§7 entry to select
+itemmarks.help.rightclick=§eRight-click§7 entry to edit
+itemmarks.help.itemid=§e=== Item ID ===
+itemmarks.help.nbtpath=§e=== NBT Path ===
+itemmarks.help.nbtvalue=§e=== NBT Value ===
+
+# Entry Editor
+itemmarks.editor.add=Add Entry
+itemmarks.editor.edit=Edit Entry
+itemmarks.editor.mark=Mark:
+itemmarks.editor.itemid=Item ID:
+itemmarks.editor.nbtpath=NBT Path:
+itemmarks.editor.value=Value:
+itemmarks.editor.nbt=NBT...
+itemmarks.editor.cancel=Cancel
+itemmarks.editor.confirm=Confirm
+
+# NBT Editor
+itemmarks.nbt.title=NBT Picker
+itemmarks.nbt.selected=§eSelected: §f%s
+itemmarks.nbt.selecthint=§7Click an NBT field to select
+itemmarks.nbt.eqvalue== Value
+itemmarks.nbt.exists=Exists (*)
+itemmarks.nbt.notexists=Not (!)
+itemmarks.nbt.expandhint=§8Click §7[+]/[-]§8 to expand/collapse
+itemmarks.nbt.overwrite.title=§eOverwrite NBT?
+itemmarks.nbt.overwrite.message=§7NBT fields already have content
+itemmarks.nbt.overwrite.confirm=§eOverwrite
+
+# Reset Confirmation
+itemmarks.reset.title=§cReset All Marks?
+itemmarks.reset.message=§7This will delete all entries!
+itemmarks.reset.confirm=§cConfirm
+
+# Configuration
+itemmarks.config.title=Configuration
+itemmarks.config.enabled=Display Marks:
+itemmarks.config.on=ON
+itemmarks.config.off=OFF
+itemmarks.config.position=Mark Position:
+itemmarks.config.scale=Mark Scale:
+itemmarks.config.close=Close
+
+# Position Names
+itemmarks.position.topleft=Top Left
+itemmarks.position.topright=Top Right
+itemmarks.position.bottomleft=Bottom Left
+itemmarks.position.middle=Middle
