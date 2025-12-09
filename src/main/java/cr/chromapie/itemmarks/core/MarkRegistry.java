@@ -178,6 +178,17 @@ public class MarkRegistry {
             }
         }
         if (!(current instanceof NBTTagCompound compound)) return false;
+        if ("*".equals(segment)) {
+            java.util.Set<String> keys = compound.func_150296_c();
+            for (String key : keys) {
+                NBTBase child = compound.getTag(key);
+                String nextPath = remaining.startsWith("[") ? remaining : remaining;
+                if (matchNbtRecursive(child, nextPath, value)) {
+                    return true;
+                }
+            }
+            return false;
+        }
         if (!compound.hasKey(segment)) {
             return "!".equals(value) && remaining.isEmpty();
         }

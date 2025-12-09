@@ -3,7 +3,6 @@ package cr.chromapie.itemmarks.gui;
 import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 import com.cleanroommc.modularui.api.IPanelHandler;
@@ -36,26 +35,20 @@ public final class GuiHelper {
 
     /**
      * Open a secondary panel from a parent panel.
-     * 
+     *
      * @param parent        The parent panel to attach to
      * @param panelSupplier Supplier that creates the new panel
      */
     public static void openPanel(ModularPanel parent, Supplier<ModularPanel> panelSupplier) {
         if (parent == null) return;
-        SecondaryPanel.IPanelBuilder builder = new SecondaryPanel.IPanelBuilder() {
-
-            @Override
-            public ModularPanel build(ModularPanel parentPanel, EntityPlayer player) {
-                return panelSupplier.get();
-            }
-        };
+        SecondaryPanel.IPanelBuilder builder = (parentPanel, player) -> panelSupplier.get();
         IPanelHandler handler = IPanelHandler.simple(parent, builder, true);
         handler.openPanel();
     }
 
     /**
      * Get the item currently held by the player.
-     * 
+     *
      * @return The held ItemStack, or null if player is null or not holding anything
      */
     public static ItemStack getHeldItem() {
@@ -66,7 +59,7 @@ public final class GuiHelper {
 
     /**
      * Check if the held item has NBT data.
-     * 
+     *
      * @return true if player is holding an item with NBT compound
      */
     public static boolean heldItemHasNbt() {
@@ -76,7 +69,7 @@ public final class GuiHelper {
 
     /**
      * Check if the held item is valid (not null and has an item).
-     * 
+     *
      * @return true if player is holding a valid item
      */
     public static boolean hasHeldItem() {

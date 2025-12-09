@@ -71,13 +71,16 @@ Press **M** key (configurable in Controls settings) to open the Item Marks Manag
 
 ### NBT Path Syntax
 
-| Syntax    | Description                            | Example        |
-|-----------|----------------------------------------|----------------|
-| `key`     | Direct access to root-level key        | `Damage`       |
-| `key.sub` | Access nested key                      | `display.Name` |
-| `list[0]` | Access first element of list           | `ench[0]`      |
-| `list[*]` | Match any element in list              | `ench[*]`      |
-| *(empty)* | Multi-condition matching at root level | -              |
+| Syntax      | Description                            | Example          |
+|-------------|----------------------------------------|------------------|
+| `key`       | Direct access to root-level key        | `Damage`         |
+| `key.sub`   | Access nested key                      | `display.Name`   |
+| `list[0]`   | Access first element of list           | `ench[0]`        |
+| `list[*]`   | Match any element in list              | `ench[*]`        |
+| `*`         | Match any key at current level         | `*`              |
+| `*.sub`     | Match any key's nested field           | `*.FluidName`    |
+| `foo.*.bar` | Wildcard in middle of path             | `Tanks.*.Amount` |
+| *(empty)*   | Multi-condition matching at root level | -                |
 
 ### NBT Value Matching
 
@@ -188,6 +191,15 @@ A|minecraft:potion:0|Potion|minecraft:strength
 - Item ID: `modid:machine:0`
 - NBT Path: *(empty)*
 - NBT Value: `active=1&energy=*`
+
+### Example 6: Wildcard Path Matching (e.g., Fluid Tanks)
+
+- Mark: `O₂`
+- Item ID: *(empty)*
+- NBT Path: `*.FluidName`
+- NBT Value: `oxygen`
+
+This matches any item where any root-level NBT key contains a `FluidName` field with value `oxygen`.
 
 ## Key Bindings
 

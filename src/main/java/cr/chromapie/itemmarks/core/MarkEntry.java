@@ -77,11 +77,13 @@ public class MarkEntry {
         sb.append(escapeField(mark))
             .append("|");
         sb.append(escapeField(itemId));
-        if (meta < 0) {
-            sb.append(":*");
-        } else if (meta > 0) {
-            sb.append(":")
-                .append(meta);
+        if (itemId != null && !itemId.isEmpty()) {
+            if (meta < 0) {
+                sb.append(":*");
+            } else if (meta > 0) {
+                sb.append(":")
+                    .append(meta);
+            }
         }
         sb.append("|");
         sb.append(escapeField(nbtPath))

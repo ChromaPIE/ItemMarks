@@ -36,6 +36,12 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     private static final int PADDING = 6;
     private static final int LIST_Y = 24;
 
+    private static int panelIdCounter = 0;
+
+    private static String nextPanelId(String prefix) {
+        return prefix + "_" + (panelIdCounter++);
+    }
+
     private int selectedIndex = -1;
     private ListWidget<IWidget, ?> entryList;
     private ModularPanel mainPanel;
@@ -100,8 +106,14 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         ButtonWidget<?> fromHandBtn = new ButtonWidget<>();
         fromHandBtn.pos(btnX, btnY);
         fromHandBtn.size(65, 18);
-        fromHandBtn.overlay(IKey.lang("itemmarks.gui.fromhand"));
+        final String fromHandText = StatCollector.translateToLocal("itemmarks.gui.fromhand");
+        fromHandBtn.overlay(IKey.dynamic(() -> {
+            boolean enabled = GuiHelper.hasHeldItem();
+            return enabled ? fromHandText : "§7" + fromHandText;
+        }));
+        fromHandBtn.onUpdateListener(btn -> GuiHelper.applyButtonStyle(btn, GuiHelper.hasHeldItem()), true);
         fromHandBtn.onMousePressed(btn -> {
+            if (!GuiHelper.hasHeldItem()) return true;
             openEditorFromHand();
             return true;
         });
@@ -133,6 +145,8 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         helpLines.add("key.sub          §7nested");
         helpLines.add("list[0]          §7first element");
         helpLines.add("list[*]          §7any element");
+        helpLines.add("*                §7any key");
+        helpLines.add("*.sub            §7any key's sub");
         helpLines.add("§7(empty)         root level");
         helpLines.add("");
         helpLines.add(StatCollector.translateToLocal("itemmarks.help.nbtvalue"));
@@ -348,13 +362,14 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         private TextFieldWidget nbtValueField;
 
         public EntryEditorPanel(GuiMarkManagerMui parent, int editIndex, MarkEntry prefill) {
-            super("entry_editor");
+            super(nextPanelId("entry_editor"));
             this.parent = parent;
             this.editIndex = editIndex;
 
             if (prefill != null) {
                 this.markText = prefill.getMark() != null ? prefill.getMark() : "";
-                if (prefill.getItemId() != null) {
+                if (prefill.getItemId() != null && !prefill.getItemId()
+                    .isEmpty()) {
                     if (prefill.getMeta() < 0) {
                         this.itemIdText = prefill.getItemId() + ":*";
                     } else {
@@ -445,8 +460,14 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             ButtonWidget<?> fromHandBtn = new ButtonWidget<>();
             fromHandBtn.pos(6, y);
             fromHandBtn.size(65, 18);
-            fromHandBtn.overlay(IKey.lang("itemmarks.gui.fromhand"));
+            final String fromHandText = StatCollector.translateToLocal("itemmarks.gui.fromhand");
+            fromHandBtn.overlay(IKey.dynamic(() -> {
+                boolean enabled = GuiHelper.hasHeldItem();
+                return enabled ? fromHandText : "§7" + fromHandText;
+            }));
+            fromHandBtn.onUpdateListener(btn -> GuiHelper.applyButtonStyle(btn, GuiHelper.hasHeldItem()), true);
             fromHandBtn.onMousePressed(btn -> {
+                if (!GuiHelper.hasHeldItem()) return true;
                 fillFromHand();
                 return true;
             });
@@ -587,7 +608,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         private ListWidget<IWidget, ?> nodeList;
 
         public NbtEditorPanelForEditor(EntryEditorPanel parent, ItemStack stack) {
-            super("nbt_editor_for_entry");
+            super(nextPanelId("nbt_editor"));
             this.parent = parent;
             this.stack = stack;
 
@@ -872,7 +893,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     public static class NbtOverwriteConfirmPanel extends ModularPanel {
 
         public NbtOverwriteConfirmPanel(NbtEditorPanelForEditor nbtPanel, String path, String value) {
-            super("nbt_overwrite_confirm");
+            super(nextPanelId("nbt_overwrite"));
             size(200, 80);
             background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
 
@@ -930,7 +951,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     public static class ResetConfirmPanel extends ModularPanel {
 
         public ResetConfirmPanel(GuiMarkManagerMui parent) {
-            super("reset_confirm");
+            super(nextPanelId("reset_confirm"));
             size(200, 80);
             background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
 
@@ -991,7 +1012,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         private int currentScale;
 
         public ConfigPanel() {
-            super("config_panel");
+            super(nextPanelId("config"));
             size(200, 130);
             background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
             currentScale = MarkConfig.getMarkScale();
