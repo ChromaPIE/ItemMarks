@@ -73,6 +73,7 @@ itemmarks.config.on=ON
 itemmarks.config.off=OFF
 itemmarks.config.position=Mark Position:
 itemmarks.config.scale=Mark Scale:
+itemmarks.config.adaptive=Adaptive Size:
 itemmarks.config.close=Close
 
 # Position Names

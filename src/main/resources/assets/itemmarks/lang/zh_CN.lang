@@ -73,6 +73,7 @@ itemmarks.config.on=开启
 itemmarks.config.off=关闭
 itemmarks.config.position=标记位置：
 itemmarks.config.scale=标记大小：
+itemmarks.config.adaptive=自适应大小：
 itemmarks.config.close=关闭
 
 # Position Names

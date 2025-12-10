@@ -2,46 +2,30 @@ package cr.chromapie.itemmarks.core;
 
 public class MarkEntry {
 
-    private String mark;
-    private String itemId;
-    private int meta;
-    private String nbtPath;
-    private String nbtValue;
+    private final String mark;
+    private final String itemId;
+    private final int meta;
+    private final String nbtPath;
+    private final String nbtValue;
 
     public MarkEntry(String mark, String itemId, int meta, String nbtPath, String nbtValue) {
-        this.mark = mark != null && mark.length() > 2 ? mark.substring(0, 2) : mark;
+        this.mark = mark != null && mark.length() > 4 ? mark.substring(0, 4) : mark;
         this.itemId = itemId;
         this.meta = meta;
         this.nbtPath = nbtPath;
         this.nbtValue = nbtValue;
     }
 
-    public MarkEntry(String mark, String itemId) {
-        this(mark, itemId, -1, null, null);
-    }
-
     public String getMark() {
         return mark;
-    }
-
-    public void setMark(String mark) {
-        this.mark = mark != null && mark.length() > 2 ? mark.substring(0, 2) : mark;
     }
 
     public String getItemId() {
         return itemId;
     }
 
-    public void setItemId(String itemId) {
-        this.itemId = itemId;
-    }
-
     public int getMeta() {
         return meta;
-    }
-
-    public void setMeta(int meta) {
-        this.meta = meta;
     }
 
     public boolean hasMetaCondition() {
@@ -56,16 +40,8 @@ public class MarkEntry {
         return nbtPath;
     }
 
-    public void setNbtPath(String nbtPath) {
-        this.nbtPath = nbtPath;
-    }
-
     public String getNbtValue() {
         return nbtValue;
-    }
-
-    public void setNbtValue(String nbtValue) {
-        this.nbtValue = nbtValue;
     }
 
     public boolean hasNbtCondition() {

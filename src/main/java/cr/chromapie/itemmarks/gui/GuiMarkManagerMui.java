@@ -205,6 +205,22 @@ public class GuiMarkManagerMui extends CustomModularScreen {
                 .alignment(Alignment.CenterLeft)
                 .color(0xFFFFFF)
                 .shadow(false));
+        btn.tooltipBuilder(tooltip -> {
+            String markLabel = StatCollector.translateToLocal("itemmarks.editor.mark");
+            String itemIdLabel = StatCollector.translateToLocal("itemmarks.editor.itemid");
+            String nbtPathLabel = StatCollector.translateToLocal("itemmarks.editor.nbtpath");
+            String valueLabel = StatCollector.translateToLocal("itemmarks.editor.value");
+            tooltip.addLine(IKey.str(String.format("§7%s §e%s", markLabel, entry.getMark())));
+            String itemId = entry.hasItemCondition() ? formatItemId(entry) : "§8*";
+            tooltip.addLine(IKey.str(String.format("§7%s §f%s", itemIdLabel, itemId)));
+            if (entry.hasNbtCondition()) {
+                String path = entry.getNbtPath();
+                if (path != null && !path.isEmpty()) {
+                    tooltip.addLine(IKey.str(String.format("§7%s §f%s", nbtPathLabel, path)));
+                }
+                tooltip.addLine(IKey.str(String.format("§7%s §f%s", valueLabel, entry.getNbtValue())));
+            }
+        });
         btn.onMousePressed(mouseBtn -> {
             if (mouseBtn == 0) {
                 MarkEntry e = MarkRegistry.getEntries()
@@ -336,10 +352,10 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         private String nbtPathText = "";
         private String nbtValueText = "";
 
-        private TextFieldWidget markField;
-        private TextFieldWidget itemIdField;
-        private TextFieldWidget nbtPathField;
-        private TextFieldWidget nbtValueField;
+        private final TextFieldWidget markField;
+        private final TextFieldWidget itemIdField;
+        private final TextFieldWidget nbtPathField;
+        private final TextFieldWidget nbtValueField;
 
         public EntryEditorPanel(GuiMarkManagerMui parent, int editIndex, MarkEntry prefill) {
             super(nextPanelId("entry_editor"));
@@ -379,7 +395,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             markField.value(new StringValue.Dynamic(() -> self.markText, val -> self.markText = val));
             markField.pos(40, y);
             markField.size(28, 16);
-            markField.setMaxLength(2);
+            markField.setMaxLength(4);
             markField.setText(this.markText);
             child(markField);
 
@@ -584,7 +600,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         private final ItemStack stack;
         private final List<NbtNode> nodes = new ArrayList<>();
         private final List<NbtNode> nodeCache = new ArrayList<>();
-        private ListWidget<IWidget, ?> nodeList;
+        private final ListWidget<IWidget, ?> nodeList;
 
         public NbtEditorPanelForEditor(EntryEditorPanel parent, ItemStack stack) {
             super(nextPanelId("nbt_editor"));
@@ -1014,7 +1030,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
 
         public ConfigPanel(GuiMarkManagerMui parent) {
             super(nextPanelId("config"));
-            size(200, 130);
+            size(200, 150);
             background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
             currentScale = MarkConfig.getMarkScale();
 
@@ -1088,8 +1104,27 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             scaleSlider.background(new Rectangle().setColor(0x80000000));
             child(scaleSlider);
 
+            TextWidget adaptiveLabel = new TextWidget(IKey.lang("itemmarks.config.adaptive"));
+            adaptiveLabel.pos(10, 96);
+            adaptiveLabel.size(80, 14);
+            adaptiveLabel.shadow(false);
+            child(adaptiveLabel);
+
+            ButtonWidget<?> adaptiveBtn = new ButtonWidget<>();
+            adaptiveBtn.pos(95, 94);
+            adaptiveBtn.size(95, 16);
+            adaptiveBtn.overlay(
+                IKey.dynamic(
+                    () -> MarkConfig.isAdaptiveSize() ? "§a" + StatCollector.translateToLocal("itemmarks.config.on")
+                        : "§c" + StatCollector.translateToLocal("itemmarks.config.off")));
+            adaptiveBtn.onMousePressed(btn -> {
+                MarkConfig.setAdaptiveSize(!MarkConfig.isAdaptiveSize());
+                return true;
+            });
+            child(adaptiveBtn);
+
             ButtonWidget<?> closeBtn = new ButtonWidget<>();
-            closeBtn.pos(70, 102);
+            closeBtn.pos(70, 122);
             closeBtn.size(60, 18);
             closeBtn.overlay(IKey.lang("itemmarks.config.close"));
             closeBtn.onMousePressed(btn -> {

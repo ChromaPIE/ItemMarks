@@ -40,31 +40,38 @@ public class MixinRenderItem {
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDisable(GL11.GL_BLEND);
 
-        float scale = MarkConfig.getActualScale();
+        float baseScale = MarkConfig.getActualScale();
+        float scale = baseScale;
+
+        if (MarkConfig.isAdaptiveSize()) {
+            float textWidth = font.getStringWidth(mark) * baseScale;
+            if (textWidth > 16) {
+                scale = baseScale * (16f / textWidth);
+            }
+        }
+
         float textWidth = font.getStringWidth(mark) * scale;
         float textHeight = 8 * scale;
 
-        float offsetX = 0;
-        float offsetY = 0;
-
-        switch (MarkConfig.getMarkPosition()) {
-            case TOP_LEFT:
+        float offsetX;
+        float offsetY = switch (MarkConfig.getMarkPosition()) {
+            case TOP_LEFT -> {
                 offsetX = 0;
-                offsetY = 0;
-                break;
-            case TOP_RIGHT:
+                yield 0;
+            }
+            case TOP_RIGHT -> {
                 offsetX = 16 - textWidth;
-                offsetY = 0;
-                break;
-            case BOTTOM_LEFT:
+                yield 0;
+            }
+            case BOTTOM_LEFT -> {
                 offsetX = 0;
-                offsetY = 16 - textHeight;
-                break;
-            case MIDDLE:
+                yield 16 - textHeight;
+            }
+            case MIDDLE -> {
                 offsetX = 8 - textWidth / 2;
-                offsetY = 8 - textHeight / 2;
-                break;
-        }
+                yield 8 - textHeight / 2;
+            }
+        };
 
         GL11.glPushMatrix();
         GL11.glTranslatef(x + offsetX, y + offsetY, 0.0F);

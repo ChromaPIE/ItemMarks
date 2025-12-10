@@ -53,6 +53,7 @@ public class MarkConfig {
         boolean enabled = true;
         MarkPosition markPosition = MarkPosition.TOP_LEFT;
         int markScale = 100;
+        boolean adaptiveSize = true;
     }
 
     public static void load(File configDir) {
@@ -116,5 +117,14 @@ public class MarkConfig {
      */
     public static float getActualScale() {
         return 0.5F * (data.markScale / 100F);
+    }
+
+    public static boolean isAdaptiveSize() {
+        return data.adaptiveSize;
+    }
+
+    public static void setAdaptiveSize(boolean adaptive) {
+        data.adaptiveSize = adaptive;
+        save();
     }
 }

@@ -143,18 +143,18 @@ public class MarkRegistry {
             }
             return matchValue(current, value);
         }
-        int dotIdx = path.indexOf('.');
-        int bracketIdx = path.indexOf('[');
+        int dotIdx = findUnescaped(path, '.');
+        int bracketIdx = findUnescaped(path, '[');
         String segment;
         String nextPath;
         if (dotIdx == -1 && bracketIdx == -1) {
-            segment = path;
+            segment = unescapePath(path);
             nextPath = "";
         } else if (bracketIdx != -1 && (dotIdx == -1 || bracketIdx < dotIdx)) {
-            segment = path.substring(0, bracketIdx);
+            segment = unescapePath(path.substring(0, bracketIdx));
             nextPath = path.substring(bracketIdx);
         } else {
-            segment = path.substring(0, dotIdx);
+            segment = unescapePath(path.substring(0, dotIdx));
             nextPath = path.substring(dotIdx + 1);
         }
         if (segment.isEmpty() && nextPath.startsWith("[")) {
@@ -193,6 +193,32 @@ public class MarkRegistry {
         }
         NBTBase next = compound.getTag(segment);
         return matchNbtRecursive(next, nextPath, value);
+    }
+
+    private static int findUnescaped(String s, char target) {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '\\' && i + 1 < s.length()) {
+                i++;
+                continue;
+            }
+            if (c == target) return i;
+        }
+        return -1;
+    }
+
+    private static String unescapePath(String s) {
+        if (s.indexOf('\\') == -1) return s;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '\\' && i + 1 < s.length()) {
+                sb.append(s.charAt(++i));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     private static boolean matchMultiCondition(NBTTagCompound compound, String conditions) {
