@@ -10,6 +10,7 @@ import net.minecraft.util.StatCollector;
 
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.IWidget;
+import com.cleanroommc.modularui.drawable.GuiTextures;
 import com.cleanroommc.modularui.drawable.Rectangle;
 import com.cleanroommc.modularui.screen.CustomModularScreen;
 import com.cleanroommc.modularui.screen.ModularPanel;
@@ -44,6 +45,8 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     private ListWidget<IWidget, ?> entryList;
     private ModularPanel mainPanel;
     private ModularPanel currentEditorPanel;
+    private String searchFilter = "";
+    private TextFieldWidget searchField;
 
     public GuiMarkManagerMui() {
         super("itemmarks");
@@ -112,6 +115,31 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             return true;
         });
         mainPanel.child(fromHandBtn);
+        btnX += 69;
+
+        ButtonWidget<?> searchIcon = new ButtonWidget<>();
+        searchIcon.pos(btnX, btnY);
+        searchIcon.size(18, 18);
+        searchIcon.overlay(GuiTextures.SEARCH);
+        searchIcon.background(new Rectangle().setColor(0x00000000));
+        searchIcon.disableHoverBackground();
+        mainPanel.child(searchIcon);
+        btnX += 16;
+
+        final GuiMarkManagerMui self = this;
+        searchField = new TextFieldWidget();
+        searchField.value(new StringValue.Dynamic(() -> self.searchFilter, val -> self.searchFilter = val));
+        searchField.pos(btnX, btnY + 1);
+        searchField.size(WIDTH - btnX - PADDING, 16);
+        searchField.setMaxLength(64);
+        searchField.onUpdateListener(w -> {
+            String current = searchField.getText();
+            if (!current.equals(searchFilter)) {
+                searchFilter = current;
+                refreshEntryList();
+            }
+        }, true);
+        mainPanel.child(searchField);
 
         return mainPanel;
     }
@@ -122,10 +150,18 @@ public class GuiMarkManagerMui extends CustomModularScreen {
 
     private void buildEntryListContent() {
         List<MarkEntry> entries = MarkRegistry.getEntries();
+        String filter = searchFilter != null ? searchFilter.toLowerCase() : "";
         for (int idx = 0; idx < entries.size(); idx++) {
             MarkEntry entry = entries.get(idx);
+            if (!filter.isEmpty() && !matchesFilter(entry, filter)) continue;
             entryList.child(buildEntryRow(entry, idx));
         }
+    }
+
+    private boolean matchesFilter(MarkEntry entry, String filter) {
+        return entry.getItemId() != null && entry.getItemId()
+            .toLowerCase()
+            .contains(filter);
     }
 
     private void refreshEntryList() {

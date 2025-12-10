@@ -26,21 +26,22 @@ Press **M** key (configurable in Controls settings) to open the Item Marks Manag
 
 ```
 ┌──────────────────────────────────────────┐
-│ [C]      Item Marks Manager          [?] │
+│ [C]      Item Marks Manager      [?] │
 ├──────────────────────────────────────────┤
-│                                          │
-│  Entry List                              │
-│  [Mark] ItemID:Meta {NBT Condition}      │
-│                                          │
+│                                      │
+│  Entry List (newest at top)          │
+│  [Mark] ItemID:Meta {NBT Condition}  │
+│                                      │
 ├──────────────────────────────────────────┤
-│ [Add] [From Hand]                        │
+│ [Add] [From Hand]    [🔍 Search...] │
 └──────────────────────────────────────────┘
 ```
 
 - **C Button**: Open configuration panel
 - **? Button**: Open help panel
-- **Add**: Create a new mark entry
+- **Add**: Create a new mark entry (appears at top of list)
 - **From Hand**: Get Item ID from held item and create new entry
+- **Search**: Real-time filter entries by Item ID
 
 ### Configuration Panel
 
