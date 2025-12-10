@@ -146,27 +146,27 @@ public class MarkRegistry {
         int dotIdx = path.indexOf('.');
         int bracketIdx = path.indexOf('[');
         String segment;
-        String remaining;
+        String nextPath;
         if (dotIdx == -1 && bracketIdx == -1) {
             segment = path;
-            remaining = "";
+            nextPath = "";
         } else if (bracketIdx != -1 && (dotIdx == -1 || bracketIdx < dotIdx)) {
             segment = path.substring(0, bracketIdx);
-            remaining = path.substring(bracketIdx);
+            nextPath = path.substring(bracketIdx);
         } else {
             segment = path.substring(0, dotIdx);
-            remaining = path.substring(dotIdx + 1);
+            nextPath = path.substring(dotIdx + 1);
         }
-        if (segment.isEmpty() && remaining.startsWith("[")) {
-            int closeIdx = remaining.indexOf(']');
+        if (segment.isEmpty() && nextPath.startsWith("[")) {
+            int closeIdx = nextPath.indexOf(']');
             if (closeIdx == -1) return false;
-            String indexPart = remaining.substring(1, closeIdx);
-            remaining = remaining.substring(closeIdx + 1);
-            if (remaining.startsWith(".")) remaining = remaining.substring(1);
+            String indexPart = nextPath.substring(1, closeIdx);
+            nextPath = nextPath.substring(closeIdx + 1);
+            if (nextPath.startsWith(".")) nextPath = nextPath.substring(1);
             if (!(current instanceof NBTTagList list)) return false;
             if ("*".equals(indexPart)) {
                 for (int i = 0; i < list.tagCount(); i++) {
-                    if (matchNbtRecursive(list.getCompoundTagAt(i), remaining, value)) {
+                    if (matchNbtRecursive(list.getCompoundTagAt(i), nextPath, value)) {
                         return true;
                     }
                 }
@@ -174,7 +174,7 @@ public class MarkRegistry {
             } else {
                 int idx = Integer.parseInt(indexPart);
                 if (idx < 0 || idx >= list.tagCount()) return false;
-                return matchNbtRecursive(list.getCompoundTagAt(idx), remaining, value);
+                return matchNbtRecursive(list.getCompoundTagAt(idx), nextPath, value);
             }
         }
         if (!(current instanceof NBTTagCompound compound)) return false;
@@ -182,7 +182,6 @@ public class MarkRegistry {
             java.util.Set<String> keys = compound.func_150296_c();
             for (String key : keys) {
                 NBTBase child = compound.getTag(key);
-                String nextPath = remaining.startsWith("[") ? remaining : remaining;
                 if (matchNbtRecursive(child, nextPath, value)) {
                     return true;
                 }
@@ -190,13 +189,10 @@ public class MarkRegistry {
             return false;
         }
         if (!compound.hasKey(segment)) {
-            return "!".equals(value) && remaining.isEmpty();
+            return "!".equals(value) && nextPath.isEmpty();
         }
         NBTBase next = compound.getTag(segment);
-        if (remaining.startsWith("[")) {
-            return matchNbtRecursive(next, remaining, value);
-        }
-        return matchNbtRecursive(next, remaining, value);
+        return matchNbtRecursive(next, nextPath, value);
     }
 
     private static boolean matchMultiCondition(NBTTagCompound compound, String conditions) {
@@ -236,13 +232,19 @@ public class MarkRegistry {
 
     public static boolean addEntry(MarkEntry entry) {
         if (isDuplicate(entry)) return false;
-        entries.add(entry);
+        entries.add(0, entry);
         save();
         return true;
     }
 
     public static boolean isDuplicate(MarkEntry entry) {
-        for (MarkEntry e : entries) {
+        return isDuplicateExcluding(entry, -1);
+    }
+
+    public static boolean isDuplicateExcluding(MarkEntry entry, int excludeIndex) {
+        for (int i = 0; i < entries.size(); i++) {
+            if (i == excludeIndex) continue;
+            MarkEntry e = entries.get(i);
             if (!strEquals(e.getItemId(), entry.getItemId())) continue;
             if (e.getMeta() != entry.getMeta()) continue;
             if (!strEquals(e.getNbtPath(), entry.getNbtPath())) continue;

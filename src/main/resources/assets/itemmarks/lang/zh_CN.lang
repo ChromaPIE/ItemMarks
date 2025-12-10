@@ -6,14 +6,37 @@ key.categories.itemmarks=物品标记
 itemmarks.gui.title=管理物品标记
 itemmarks.gui.add=添加
 itemmarks.gui.fromhand=获取手持
-itemmarks.gui.delete=删除
 
-# Help Tooltip
-itemmarks.help.leftclick=§e左键§7 选择条目
-itemmarks.help.rightclick=§e右键§7 编辑条目
-itemmarks.help.itemid=§e=== 物品 ID ===
-itemmarks.help.nbtpath=§e=== NBT 路径 ===
-itemmarks.help.nbtvalue=§e=== NBT 值 ===
+# Entry Context Menu
+itemmarks.entry.ctx.dupe=复制
+itemmarks.entry.ctx.delete=§c删除
+
+# Help Panel
+itemmarks.help.title=§8帮助
+itemmarks.help.section.entry=§0[ 条目列表 ]
+itemmarks.help.leftclick=§1左键§8 - 编辑条目
+itemmarks.help.rightclick=§1右键§8 - 复制 / 删除
+itemmarks.help.section.nbt=§0[ NBT选取器 ]
+itemmarks.help.nbt.expand=§1左键§8 - 展开/折叠
+itemmarks.help.nbt.select=§1右键§8 - 选择操作
+itemmarks.help.section.itemid=§0[ 物品ID格式 ]
+itemmarks.help.itemid.base=§1modid:item§8 - meta=0
+itemmarks.help.itemid.meta=§1modid:item:16§8 - meta=16
+itemmarks.help.itemid.any=§1modid:item:*§8 - 任意meta
+itemmarks.help.itemid.empty=§8(留空) - 仅NBT匹配
+itemmarks.help.section.nbtpath=§0[ NBT路径语法 ]
+itemmarks.help.nbtpath.key=§1key§8 - 直接访问
+itemmarks.help.nbtpath.nested=§1key.sub§8 - 嵌套访问
+itemmarks.help.nbtpath.index=§1list[0]§8 - 首个元素
+itemmarks.help.nbtpath.any=§1list[*]§8 - 任意元素
+itemmarks.help.nbtpath.wildcard=§1*§8 - 任意键
+itemmarks.help.nbtpath.wildcardnest=§1*.sub§8 - 任意键的子项
+itemmarks.help.nbtpath.empty=§8(留空) - 根级别
+itemmarks.help.section.nbtvalue=§0[ NBT值匹配 ]
+itemmarks.help.nbtvalue.exact=§1123§8 - 精确匹配
+itemmarks.help.nbtvalue.exists=§1*§8 - 字段存在
+itemmarks.help.nbtvalue.notexists=§1!§8 - 字段不存在
+itemmarks.help.nbtvalue.multi=§1a=1&b=2§8 - 多条件
 
 # Entry Editor
 itemmarks.editor.add=添加条目
@@ -30,9 +53,9 @@ itemmarks.editor.confirm=确认
 itemmarks.nbt.title=NBT选取器
 itemmarks.nbt.selected=§e已选: §f%s
 itemmarks.nbt.selecthint=§7点击NBT字段以选择
-itemmarks.nbt.eqvalue== 值
-itemmarks.nbt.exists=存在 (*)
-itemmarks.nbt.notexists=不存在 (!)
+itemmarks.nbt.ctx.value== 值
+itemmarks.nbt.ctx.exists=存在 (*)
+itemmarks.nbt.ctx.not=不存在 (!)
 itemmarks.nbt.expandhint=§8点击 §7[+]/[-]§8 展开/折叠
 itemmarks.nbt.overwrite.title=§e覆盖NBT？
 itemmarks.nbt.overwrite.message=§7NBT字段已有内容

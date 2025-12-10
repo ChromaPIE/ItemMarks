@@ -98,20 +98,16 @@ public class MarkEntry {
         String mark = unescapeField(parts[0]);
         String itemIdRaw = unescapeField(parts[1]);
         String itemId;
-        int meta = 0;
+        int meta = -1;
         int lastColon = itemIdRaw.lastIndexOf(':');
         int firstColon = itemIdRaw.indexOf(':');
         if (lastColon > firstColon) {
             String metaPart = itemIdRaw.substring(lastColon + 1);
             itemId = itemIdRaw.substring(0, lastColon);
-            if ("*".equals(metaPart)) {
-                meta = -1;
-            } else {
-                try {
-                    meta = Integer.parseInt(metaPart);
-                } catch (NumberFormatException e) {
-                    itemId = itemIdRaw;
-                }
+            try {
+                meta = Integer.parseInt(metaPart);
+            } catch (NumberFormatException e) {
+                itemId = itemIdRaw;
             }
         } else {
             itemId = itemIdRaw;

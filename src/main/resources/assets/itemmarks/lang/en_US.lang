@@ -6,14 +6,37 @@ key.categories.itemmarks=Item Marks
 itemmarks.gui.title=Item Marks Manager
 itemmarks.gui.add=Add
 itemmarks.gui.fromhand=From Hand
-itemmarks.gui.delete=Delete
 
-# Help Tooltip
-itemmarks.help.leftclick=§eLeft-click§7 entry to select
-itemmarks.help.rightclick=§eRight-click§7 entry to edit
-itemmarks.help.itemid=§e=== Item ID ===
-itemmarks.help.nbtpath=§e=== NBT Path ===
-itemmarks.help.nbtvalue=§e=== NBT Value ===
+# Entry Context Menu
+itemmarks.entry.ctx.dupe=Dupe
+itemmarks.entry.ctx.delete=§cDelete
+
+# Help Panel
+itemmarks.help.title=§8Help
+itemmarks.help.section.entry=§0[ Entry List ]
+itemmarks.help.leftclick=§1Left-click§8 - Edit entry
+itemmarks.help.rightclick=§1Right-click§8 - Dupe / Delete
+itemmarks.help.section.nbt=§0[ NBT Picker ]
+itemmarks.help.nbt.expand=§1Left-click§8 - Expand/Collapse
+itemmarks.help.nbt.select=§1Right-click§8 - Select action
+itemmarks.help.section.itemid=§0[ Item ID Format ]
+itemmarks.help.itemid.base=§1modid:item§8 - meta=0
+itemmarks.help.itemid.meta=§1modid:item:16§8 - meta=16
+itemmarks.help.itemid.any=§1modid:item:*§8 - any meta
+itemmarks.help.itemid.empty=§8(empty) - NBT-only match
+itemmarks.help.section.nbtpath=§0[ NBT Path Syntax ]
+itemmarks.help.nbtpath.key=§1key§8 - direct access
+itemmarks.help.nbtpath.nested=§1key.sub§8 - nested
+itemmarks.help.nbtpath.index=§1list[0]§8 - first element
+itemmarks.help.nbtpath.any=§1list[*]§8 - any element
+itemmarks.help.nbtpath.wildcard=§1*§8 - any key
+itemmarks.help.nbtpath.wildcardnest=§1*.sub§8 - any key's sub
+itemmarks.help.nbtpath.empty=§8(empty) - root level
+itemmarks.help.section.nbtvalue=§0[ NBT Value Matching ]
+itemmarks.help.nbtvalue.exact=§1123§8 - exact match
+itemmarks.help.nbtvalue.exists=§1*§8 - field exists
+itemmarks.help.nbtvalue.notexists=§1!§8 - field not exists
+itemmarks.help.nbtvalue.multi=§1a=1&b=2§8 - multi-condition
 
 # Entry Editor
 itemmarks.editor.add=Add Entry
@@ -30,9 +53,9 @@ itemmarks.editor.confirm=Confirm
 itemmarks.nbt.title=NBT Picker
 itemmarks.nbt.selected=§eSelected: §f%s
 itemmarks.nbt.selecthint=§7Click an NBT field to select
-itemmarks.nbt.eqvalue== Value
-itemmarks.nbt.exists=Exists (*)
-itemmarks.nbt.notexists=Not (!)
+itemmarks.nbt.ctx.value== Value
+itemmarks.nbt.ctx.exists=Exists (*)
+itemmarks.nbt.ctx.not=Not (!)
 itemmarks.nbt.expandhint=§8Click §7[+]/[-]§8 to expand/collapse
 itemmarks.nbt.overwrite.title=§eOverwrite NBT?
 itemmarks.nbt.overwrite.message=§7NBT fields already have content

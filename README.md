@@ -26,28 +26,35 @@ Press **M** key (configurable in Controls settings) to open the Item Marks Manag
 
 ```
 ┌──────────────────────────────────────────┐
-│ [C]      Item Marks Manager      [R] │
+│ [C]      Item Marks Manager          [?] │
 ├──────────────────────────────────────────┤
-│                                      │
-│  Entry List                          │
-│  [Mark] ItemID:Meta {NBT Condition}  │
-│                                      │
+│                                          │
+│  Entry List                              │
+│  [Mark] ItemID:Meta {NBT Condition}      │
+│                                          │
 ├──────────────────────────────────────────┤
-│ [Add] [From Hand] [Delete]       [?] │
+│ [Add] [From Hand]                        │
 └──────────────────────────────────────────┘
 ```
 
 - **C Button**: Open configuration panel
-- **R Button**: Reset all entries (requires confirmation)
+- **? Button**: Open help panel
 - **Add**: Create a new mark entry
 - **From Hand**: Get Item ID from held item and create new entry
-- **Delete**: Delete selected entry
-- **[?]**: Display help tooltip
+
+### Configuration Panel
+
+- **R Button** (top right): Reset all entries (requires confirmation)
+- **Enabled**: Toggle mark rendering on/off
+- **Position**: Cycle through mark positions (Top-Left, Top-Right, Bottom-Left, Bottom-Right)
+- **Scale**: Adjust mark size (50% - 300%)
 
 ### Entry List Operations
 
-- **Left-click**: Select entry
-- **Right-click**: Edit entry
+- **Left-click**: Edit entry
+- **Right-click**: Open context menu
+  - **Dupe**: Create new entry with same content (for creating variations)
+  - **Delete**: Delete entry
 
 ## Entry Editor
 
@@ -96,8 +103,8 @@ Press **M** key (configurable in Controls settings) to open the Item Marks Manag
 Click **NBT...** button to open the NBT Picker (requires holding an item with NBT data):
 
 - Visual display of item's NBT structure
-- Click `[+]/[-]` to expand/collapse compound tags
-- After selecting a field, choose:
+- **Left-click** `[+]/[-]` to expand/collapse compound tags
+- **Right-click** on a field to select an action:
   - **= Value**: Match the field's current value
   - **Exists (\*)**: Match if field exists
   - **Not (!)**: Match if field does not exist

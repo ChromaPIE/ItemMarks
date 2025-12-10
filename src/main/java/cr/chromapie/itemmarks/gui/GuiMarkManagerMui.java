@@ -2,7 +2,6 @@ package cr.chromapie.itemmarks.gui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -14,7 +13,6 @@ import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.drawable.Rectangle;
 import com.cleanroommc.modularui.screen.CustomModularScreen;
 import com.cleanroommc.modularui.screen.ModularPanel;
-import com.cleanroommc.modularui.screen.RichTooltip;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.utils.Alignment;
 import com.cleanroommc.modularui.value.DoubleValue;
@@ -24,6 +22,7 @@ import com.cleanroommc.modularui.widgets.ListWidget;
 import com.cleanroommc.modularui.widgets.SliderWidget;
 import com.cleanroommc.modularui.widgets.TextWidget;
 import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
+import com.github.bsideup.jabel.Desugar;
 
 import cr.chromapie.itemmarks.core.MarkConfig;
 import cr.chromapie.itemmarks.core.MarkEntry;
@@ -42,9 +41,9 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         return prefix + "_" + (panelIdCounter++);
     }
 
-    private int selectedIndex = -1;
     private ListWidget<IWidget, ?> entryList;
     private ModularPanel mainPanel;
+    private ModularPanel currentEditorPanel;
 
     public GuiMarkManagerMui() {
         super("itemmarks");
@@ -54,12 +53,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     public ModularPanel buildUI(ModularGuiContext context) {
         mainPanel = ModularPanel.defaultPanel("mark_manager", WIDTH, HEIGHT);
 
-        TextWidget title = new TextWidget(IKey.lang("itemmarks.gui.title"));
-        title.alignment(Alignment.Center);
-        title.pos(0, 6);
-        title.size(WIDTH - 20, 14);
-        title.shadow(false);
-        mainPanel.child(title);
+        mainPanel.child(GuiHelper.createTitle("itemmarks.gui.title", WIDTH, 6));
 
         ButtonWidget<?> configBtn = new ButtonWidget<>();
         configBtn.pos(4, 4);
@@ -71,15 +65,15 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         });
         mainPanel.child(configBtn);
 
-        ButtonWidget<?> resetBtn = new ButtonWidget<>();
-        resetBtn.pos(WIDTH - 18, 4);
-        resetBtn.size(14, 14);
-        resetBtn.overlay(IKey.str("§cR"));
-        resetBtn.onMousePressed(btn -> {
-            openResetConfirmation();
+        ButtonWidget<?> helpBtn = new ButtonWidget<>();
+        helpBtn.pos(WIDTH - 18, 4);
+        helpBtn.size(14, 14);
+        helpBtn.overlay(IKey.str("§e?"));
+        helpBtn.onMousePressed(btn -> {
+            openHelpPanel();
             return true;
         });
-        mainPanel.child(resetBtn);
+        mainPanel.child(helpBtn);
 
         int listHeight = HEIGHT - LIST_Y - 30;
         entryList = new ListWidget<>();
@@ -118,62 +112,18 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             return true;
         });
         mainPanel.child(fromHandBtn);
-        btnX += 69;
-
-        ButtonWidget<?> deleteBtn = new ButtonWidget<>();
-        deleteBtn.pos(btnX, btnY);
-        deleteBtn.size(45, 18);
-        deleteBtn.overlay(IKey.lang("itemmarks.gui.delete"));
-        deleteBtn.onMousePressed(btn -> {
-            deleteSelectedEntry();
-            return true;
-        });
-        mainPanel.child(deleteBtn);
-        btnX += 49;
-
-        final List<String> helpLines = new ArrayList<>();
-        helpLines.add(StatCollector.translateToLocal("itemmarks.help.leftclick"));
-        helpLines.add(StatCollector.translateToLocal("itemmarks.help.rightclick"));
-        helpLines.add("");
-        helpLines.add(StatCollector.translateToLocal("itemmarks.help.itemid"));
-        helpLines.add("modid:item       §7meta=0");
-        helpLines.add("modid:item:16    §7meta=16");
-        helpLines.add("modid:item:*     §7any meta");
-        helpLines.add("");
-        helpLines.add(StatCollector.translateToLocal("itemmarks.help.nbtpath"));
-        helpLines.add("key              §7direct access");
-        helpLines.add("key.sub          §7nested");
-        helpLines.add("list[0]          §7first element");
-        helpLines.add("list[*]          §7any element");
-        helpLines.add("*                §7any key");
-        helpLines.add("*.sub            §7any key's sub");
-        helpLines.add("§7(empty)         root level");
-        helpLines.add("");
-        helpLines.add(StatCollector.translateToLocal("itemmarks.help.nbtvalue"));
-        helpLines.add("123              §7exact (auto strip s/b/l)");
-        helpLines.add("*                §7field exists");
-        helpLines.add("!                §7field not exists");
-        helpLines.add("a=1&b=2          §7multi-condition");
-
-        TextWidget helpIcon = new TextWidget(IKey.str("§e[?]"));
-        helpIcon.pos(WIDTH - 24, btnY + 2);
-        helpIcon.size(20, 14);
-        helpIcon.shadow(false);
-        helpIcon.tooltipBuilder((Consumer<RichTooltip>) tooltip -> {
-            for (String line : helpLines) {
-                tooltip.addLine(line);
-            }
-        });
-        mainPanel.child(helpIcon);
 
         return mainPanel;
     }
 
+    private void openHelpPanel() {
+        GuiHelper.openPanel(mainPanel, HelpPanel::new);
+    }
+
     private void buildEntryListContent() {
         List<MarkEntry> entries = MarkRegistry.getEntries();
-        for (int i = 0; i < entries.size(); i++) {
-            final int idx = i;
-            MarkEntry entry = entries.get(i);
+        for (int idx = 0; idx < entries.size(); idx++) {
+            MarkEntry entry = entries.get(idx);
             entryList.child(buildEntryRow(entry, idx));
         }
     }
@@ -207,12 +157,13 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         }
 
         final int idx = index;
+        final GuiMarkManagerMui self = this;
         ButtonWidget<?> btn = new ButtonWidget<>();
         btn.left(0);
         btn.right(0);
         btn.height(14);
-        btn.background(
-            index == selectedIndex ? new Rectangle().setColor(0x80FFFFFF) : new Rectangle().setColor(0x00000000));
+        btn.background(new Rectangle().setColor(0x00000000));
+        btn.hoverBackground(new Rectangle().setColor(0x40FFFFFF));
         btn.overlay(
             IKey.str(text)
                 .alignment(Alignment.CenterLeft)
@@ -220,20 +171,24 @@ public class GuiMarkManagerMui extends CustomModularScreen {
                 .shadow(false));
         btn.onMousePressed(mouseBtn -> {
             if (mouseBtn == 0) {
-                selectEntry(idx);
-            } else if (mouseBtn == 1) {
                 MarkEntry e = MarkRegistry.getEntries()
                     .get(idx);
                 openEntryEditor(idx, e);
+            } else if (mouseBtn == 1) {
+                int mx = self.getContext()
+                    .getAbsMouseX();
+                int my = self.getContext()
+                    .getAbsMouseY();
+                openEntryContextMenu(idx, mx, my);
             }
             return true;
         });
         return btn;
     }
 
-    private void selectEntry(int index) {
-        selectedIndex = index;
-        refreshEntryList();
+    private void openEntryContextMenu(int index, int mouseX, int mouseY) {
+        final GuiMarkManagerMui self = this;
+        GuiHelper.openPanel(mainPanel, () -> new EntryContextMenu(self, index, mouseX, mouseY));
     }
 
     private String formatItemId(MarkEntry entry) {
@@ -244,11 +199,10 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         }
     }
 
-    private void deleteSelectedEntry() {
-        if (selectedIndex >= 0 && selectedIndex < MarkRegistry.getEntries()
+    public void deleteEntry(int index) {
+        if (index >= 0 && index < MarkRegistry.getEntries()
             .size()) {
-            MarkRegistry.removeEntry(selectedIndex);
-            selectedIndex = -1;
+            MarkRegistry.removeEntry(index);
             refreshEntryList();
         }
     }
@@ -264,11 +218,14 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         openEntryEditor(-1, new MarkEntry("", itemId, meta, null, null));
     }
 
-    private void openEntryEditor(int editIndex, MarkEntry prefill) {
+    public void openEntryEditor(int idx, MarkEntry pf) {
+        if (currentEditorPanel != null) {
+            currentEditorPanel.closeIfOpen();
+        }
         final GuiMarkManagerMui self = this;
-        final int idx = editIndex;
-        final MarkEntry pf = prefill;
-        GuiHelper.openPanel(mainPanel, () -> new EntryEditorPanel(self, idx, pf));
+        EntryEditorPanel panel = new EntryEditorPanel(self, idx, pf);
+        currentEditorPanel = panel;
+        GuiHelper.openPanel(mainPanel, () -> panel);
     }
 
     public void onEditorConfirm(int editIndex, String mark, String itemIdRaw, String nbtPath, String nbtValue) {
@@ -279,7 +236,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
 
         ParsedItemId parsed = parseItemId(itemIdRaw);
 
-        MarkEntry entry = new MarkEntry(mark, parsed.itemId, parsed.meta, nbtPath, nbtValue);
+        MarkEntry entry = new MarkEntry(mark, parsed.itemId(), parsed.meta(), nbtPath, nbtValue);
 
         if (editIndex >= 0 && editIndex < MarkRegistry.getEntries()
             .size()) {
@@ -294,22 +251,17 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         editorPanel.setNbtFields(path, value);
     }
 
-    private void openResetConfirmation() {
-        final GuiMarkManagerMui self = this;
-        GuiHelper.openPanel(mainPanel, () -> new ResetConfirmPanel(self));
-    }
-
     private void openConfigPanel() {
-        GuiHelper.openPanel(mainPanel, ConfigPanel::new);
+        final GuiMarkManagerMui self = this;
+        GuiHelper.openPanel(mainPanel, () -> new ConfigPanel(self));
     }
 
     public void resetAllEntries() {
         MarkRegistry.clear();
-        selectedIndex = -1;
         refreshEntryList();
     }
 
-    private ParsedItemId parseItemId(String raw) {
+    static ParsedItemId parseItemId(String raw) {
         int lastColon = raw.lastIndexOf(':');
         int firstColon = raw.indexOf(':');
         if (lastColon > firstColon) {
@@ -327,16 +279,8 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         return new ParsedItemId(raw, -1);
     }
 
-    private static class ParsedItemId {
-
-        final String itemId;
-        final int meta;
-
-        ParsedItemId(String itemId, int meta) {
-            this.itemId = itemId;
-            this.meta = meta;
-        }
-    }
+    @Desugar
+    record ParsedItemId(String itemId, int meta) {}
 
     @Override
     public boolean doesPauseGame() {
@@ -384,12 +328,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
 
             String titleKey = editIndex >= 0 ? "itemmarks.editor.edit" : "itemmarks.editor.add";
-            TextWidget title = new TextWidget(IKey.lang(titleKey));
-            title.alignment(Alignment.Center);
-            title.pos(0, 6);
-            title.size(WIDTH, 14);
-            title.shadow(false);
-            child(title);
+            child(GuiHelper.createTitle(titleKey, WIDTH, 6));
 
             final EntryEditorPanel self = this;
             int y = 22;
@@ -506,40 +445,45 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             confirmBtn.size(60, 18);
             final String confirmText = StatCollector.translateToLocal("itemmarks.editor.confirm");
             confirmBtn.overlay(IKey.dynamic(() -> {
-                String mark = markField.getText()
-                    .trim();
-                String itemId = itemIdField.getText()
-                    .trim();
-                String nbtVal = nbtValueField.getText()
-                    .trim();
-                boolean enabled = !mark.isEmpty() && (!itemId.isEmpty() || !nbtVal.isEmpty());
+                boolean enabled = isConfirmEnabled();
                 return enabled ? "§a" + confirmText : "§7" + confirmText;
             }));
-            confirmBtn.onUpdateListener(btn -> {
-                String mark = markField.getText()
-                    .trim();
-                String itemId = itemIdField.getText()
-                    .trim();
-                String nbtVal = nbtValueField.getText()
-                    .trim();
-                boolean enabled = !mark.isEmpty() && (!itemId.isEmpty() || !nbtVal.isEmpty());
-                GuiHelper.applyButtonStyle(btn, enabled);
-            }, true);
+            confirmBtn.onUpdateListener(btn -> GuiHelper.applyButtonStyle(btn, isConfirmEnabled()), true);
             confirmBtn.onMousePressed(btn -> {
+                if (!isConfirmEnabled()) return true;
                 String mark = markField.getText()
                     .trim();
                 String itemId = itemIdField.getText()
                     .trim();
-                String nbtVal = nbtValueField.getText()
-                    .trim();
-                if (mark.isEmpty() || (itemId.isEmpty() && nbtVal.isEmpty())) return true;
                 String nbtPath = nbtPathField.getText()
+                    .trim();
+                String nbtVal = nbtValueField.getText()
                     .trim();
                 parent.onEditorConfirm(editIndex, mark, itemId, nbtPath, nbtVal);
                 closeIfOpen();
                 return true;
             });
             child(confirmBtn);
+        }
+
+        private boolean isConfirmEnabled() {
+            String mark = markField.getText()
+                .trim();
+            String itemIdRaw = itemIdField.getText()
+                .trim();
+            String nbtPath = nbtPathField.getText()
+                .trim();
+            String nbtVal = nbtValueField.getText()
+                .trim();
+
+            if (mark.isEmpty()) return false;
+            if (itemIdRaw.isEmpty() && nbtVal.isEmpty()) return false;
+
+            ParsedItemId parsed = parseItemId(itemIdRaw);
+            String path = nbtPath.isEmpty() ? null : nbtPath;
+            String value = nbtVal.isEmpty() ? null : nbtVal;
+            MarkEntry tempEntry = new MarkEntry(mark, parsed.itemId(), parsed.meta(), path, value);
+            return !MarkRegistry.isDuplicateExcluding(tempEntry, editIndex);
         }
 
         private void fillFromHand() {
@@ -591,20 +535,19 @@ public class GuiMarkManagerMui extends CustomModularScreen {
 
         @Override
         public boolean isDraggable() {
-            return false;
+            return true;
         }
     }
 
     public static class NbtEditorPanelForEditor extends ModularPanel {
 
-        private static final int WIDTH = 280;
-        private static final int HEIGHT = 200;
+        private static final int WIDTH = 200;
+        private static final int HEIGHT = 120;
 
         private final EntryEditorPanel parent;
         private final ItemStack stack;
         private final List<NbtNode> nodes = new ArrayList<>();
         private final List<NbtNode> nodeCache = new ArrayList<>();
-        private NbtNode selectedNode = null;
         private ListWidget<IWidget, ?> nodeList;
 
         public NbtEditorPanelForEditor(EntryEditorPanel parent, ItemStack stack) {
@@ -615,97 +558,35 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             size(WIDTH, HEIGHT);
             background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
 
-            TextWidget title = new TextWidget(IKey.lang("itemmarks.nbt.title"));
-            title.alignment(Alignment.Center);
-            title.size(WIDTH, 16);
-            title.pos(0, 6);
-            title.shadow(false);
-            child(title);
+            child(GuiHelper.createTitle("itemmarks.nbt.title", WIDTH, 6));
+            child(ButtonWidget.panelCloseButton());
 
             nodeList = new ListWidget<>();
             nodeList.pos(6, 24);
-            nodeList.size(WIDTH - 12, HEIGHT - 90);
+            nodeList.size(WIDTH - 12, HEIGHT - 30);
             nodeList.background(new Rectangle().setColor(0x80000000));
 
             rebuildNodes();
             refreshNodeList();
 
             child(nodeList);
-
-            final String selectedPrefix = StatCollector.translateToLocal("itemmarks.nbt.selected");
-            final String selectHint = StatCollector.translateToLocal("itemmarks.nbt.selecthint");
-            TextWidget selectedLabel = new TextWidget(
-                IKey.dynamic(
-                    () -> selectedNode != null ? String.format(selectedPrefix, selectedNode.path) : selectHint));
-            selectedLabel.pos(6, HEIGHT - 62);
-            selectedLabel.size(WIDTH - 12, 12);
-            selectedLabel.shadow(false);
-            child(selectedLabel);
-
-            int btnY = HEIGHT - 45;
-            int btnX = 6;
-
-            ButtonWidget<?> valueBtn = new ButtonWidget<>();
-            valueBtn.pos(btnX, btnY);
-            valueBtn.size(55, 18);
-            valueBtn.overlay(IKey.lang("itemmarks.nbt.eqvalue"));
-            valueBtn.onMousePressed(btn -> {
-                applyCondition(0);
-                return true;
-            });
-            child(valueBtn);
-            btnX += 59;
-
-            ButtonWidget<?> existsBtn = new ButtonWidget<>();
-            existsBtn.pos(btnX, btnY);
-            existsBtn.size(60, 18);
-            existsBtn.overlay(IKey.lang("itemmarks.nbt.exists"));
-            existsBtn.onMousePressed(btn -> {
-                applyCondition(1);
-                return true;
-            });
-            child(existsBtn);
-            btnX += 64;
-
-            ButtonWidget<?> notBtn = new ButtonWidget<>();
-            notBtn.pos(btnX, btnY);
-            notBtn.size(50, 18);
-            notBtn.overlay(IKey.lang("itemmarks.nbt.notexists"));
-            notBtn.onMousePressed(btn -> {
-                applyCondition(2);
-                return true;
-            });
-            child(notBtn);
-            btnX += 70;
-
-            ButtonWidget<?> cancelBtn = new ButtonWidget<>();
-            cancelBtn.pos(btnX, btnY);
-            cancelBtn.size(55, 18);
-            cancelBtn.overlay(IKey.lang("itemmarks.editor.cancel"));
-            cancelBtn.onMousePressed(btn -> {
-                closeIfOpen();
-                return true;
-            });
-            child(cancelBtn);
-
-            TextWidget hintText = new TextWidget(IKey.lang("itemmarks.nbt.expandhint"));
-            hintText.pos(6, HEIGHT - 22);
-            hintText.size(WIDTH - 12, 14);
-            hintText.shadow(false);
-            child(hintText);
         }
 
-        private void applyCondition(int type) {
-            if (selectedNode == null) return;
-            String path = selectedNode.wildcardPath != null ? selectedNode.wildcardPath : selectedNode.path;
+        private void openContextMenu(NbtNode node, int mouseX, int mouseY) {
+            final NbtEditorPanelForEditor self = this;
+            GuiHelper.openPanel(this, () -> new NbtContextMenu(self, node, mouseX, mouseY));
+        }
+
+        void applyCondition(NbtNode node, int type) {
+            String path = node.wildcardPath != null ? node.wildcardPath : node.path;
             String value;
             switch (type) {
                 case 0:
-                    if (selectedNode.tag instanceof net.minecraft.nbt.NBTTagCompound
-                        || selectedNode.tag instanceof net.minecraft.nbt.NBTTagList) {
+                    if (node.tag instanceof net.minecraft.nbt.NBTTagCompound
+                        || node.tag instanceof net.minecraft.nbt.NBTTagList) {
                         value = "*";
                     } else {
-                        String v = selectedNode.tag.toString();
+                        String v = node.tag.toString();
                         if (v.startsWith("\"") && v.endsWith("\"")) {
                             v = v.substring(1, v.length() - 1);
                         }
@@ -734,7 +615,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             }
         }
 
-        private void doApply(String path, String value) {
+        void doApply(String path, String value) {
             parent.setNbtFields(path, value);
             closeIfOpen();
         }
@@ -832,23 +713,32 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             }
 
             String display = indent + prefix + "§b" + node.key + "§f: " + formatValue(node.tag);
-            boolean isSelected = node == selectedNode;
 
             ButtonWidget<?> btn = new ButtonWidget<>();
             btn.left(0);
             btn.right(0);
             btn.height(14);
-            btn.background(isSelected ? new Rectangle().setColor(0x80FFFF00) : new Rectangle().setColor(0x00000000));
+            btn.background(new Rectangle().setColor(0x00000000));
+            btn.hoverBackground(new Rectangle().setColor(0x40FFFFFF));
             btn.overlay(
                 IKey.str(display)
                     .alignment(Alignment.CenterLeft)
                     .shadow(false));
-            btn.onMousePressed(b -> {
-                selectedNode = node;
-                if (isExpandable) {
-                    node.expanded = !node.expanded;
+            final NbtNode n = node;
+            final NbtEditorPanelForEditor self = this;
+            btn.onMousePressed(mouseButton -> {
+                if (mouseButton == 0) {
+                    if (isExpandable) {
+                        n.expanded = !n.expanded;
+                        refreshNodeList();
+                    }
+                } else if (mouseButton == 1) {
+                    int mx = self.getContext()
+                        .getAbsMouseX();
+                    int my = self.getContext()
+                        .getAbsMouseY();
+                    openContextMenu(n, mx, my);
                 }
-                refreshNodeList();
                 return true;
             });
             return btn;
@@ -862,9 +752,94 @@ public class GuiMarkManagerMui extends CustomModularScreen {
                 return "§8[" + ((net.minecraft.nbt.NBTTagList) tag).tagCount() + " elements]";
             } else {
                 String s = tag.toString();
-                if (s.length() > 35) s = s.substring(0, 32) + "...";
+                if (s.length() > 30) s = s.substring(0, 27) + "...";
                 return "§a" + s;
             }
+        }
+    }
+
+    public static class NbtContextMenu extends ModularPanel {
+
+        private static final int WIDTH = 70;
+        private static final int HEIGHT = 54;
+
+        public NbtContextMenu(NbtEditorPanelForEditor parent, NbtNode node, int mouseX, int mouseY) {
+            super(nextPanelId("nbt_ctx"));
+            size(WIDTH, HEIGHT);
+            background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
+
+            GuiHelper.positionContextMenu(this, mouseX, mouseY, WIDTH, HEIGHT, parent.getScreen());
+
+            child(GuiHelper.createContextMenuButton("itemmarks.nbt.ctx.value", 4, 4, WIDTH - 8, 14, () -> {
+                parent.applyCondition(node, 0);
+                closeIfOpen();
+            }));
+
+            child(GuiHelper.createContextMenuButton("itemmarks.nbt.ctx.exists", 4, 20, WIDTH - 8, 14, () -> {
+                parent.applyCondition(node, 1);
+                closeIfOpen();
+            }));
+
+            child(GuiHelper.createContextMenuButton("itemmarks.nbt.ctx.not", 4, 36, WIDTH - 8, 14, () -> {
+                parent.applyCondition(node, 2);
+                closeIfOpen();
+            }));
+        }
+
+        @Override
+        public boolean closeOnOutOfBoundsClick() {
+            return true;
+        }
+
+        @Override
+        public boolean disablePanelsBelow() {
+            return false;
+        }
+
+        @Override
+        public boolean isDraggable() {
+            return false;
+        }
+    }
+
+    public static class EntryContextMenu extends ModularPanel {
+
+        private static final int WIDTH = 60;
+        private static final int HEIGHT = 40;
+
+        public EntryContextMenu(GuiMarkManagerMui parent, int entryIndex, int mouseX, int mouseY) {
+            super(nextPanelId("entry_ctx"));
+            size(WIDTH, HEIGHT);
+            background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
+
+            GuiHelper.positionContextMenu(this, mouseX, mouseY, WIDTH, HEIGHT, parent);
+
+            child(GuiHelper.createContextMenuButton("itemmarks.entry.ctx.dupe", 4, 4, WIDTH - 8, 14, () -> {
+                MarkEntry entry = MarkRegistry.getEntries()
+                    .get(entryIndex);
+                parent.openEntryEditor(-1, entry);
+                closeIfOpen();
+            }));
+
+            child(GuiHelper.createContextMenuButton("itemmarks.entry.ctx.delete", 4, 20, WIDTH - 8, 14, () -> {
+                parent.deleteEntry(entryIndex);
+                closeIfOpen();
+            }));
+        }
+
+        @Override
+        public boolean closeOnOutOfBoundsClick() {
+            return true;
+        }
+
+        @Override
+        public boolean disablePanelsBelow() {
+            return false;
+        }
+
+        @Override
+        public boolean isDraggable() {
+            return false;
         }
     }
 
@@ -897,12 +872,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             size(200, 80);
             background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
 
-            TextWidget title = new TextWidget(IKey.lang("itemmarks.nbt.overwrite.title"));
-            title.alignment(Alignment.Center);
-            title.pos(0, 12);
-            title.size(200, 14);
-            title.shadow(false);
-            child(title);
+            child(GuiHelper.createTitle("itemmarks.nbt.overwrite.title", 200, 12));
 
             TextWidget msg = new TextWidget(IKey.lang("itemmarks.nbt.overwrite.message"));
             msg.alignment(Alignment.Center);
@@ -955,12 +925,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             size(200, 80);
             background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
 
-            TextWidget title = new TextWidget(IKey.lang("itemmarks.reset.title"));
-            title.alignment(Alignment.Center);
-            title.pos(0, 12);
-            title.size(200, 14);
-            title.shadow(false);
-            child(title);
+            child(GuiHelper.createTitle("itemmarks.reset.title", 200, 12));
 
             TextWidget msg = new TextWidget(IKey.lang("itemmarks.reset.message"));
             msg.alignment(Alignment.Center);
@@ -1011,18 +976,23 @@ public class GuiMarkManagerMui extends CustomModularScreen {
 
         private int currentScale;
 
-        public ConfigPanel() {
+        public ConfigPanel(GuiMarkManagerMui parent) {
             super(nextPanelId("config"));
             size(200, 130);
             background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
             currentScale = MarkConfig.getMarkScale();
 
-            TextWidget title = new TextWidget(IKey.lang("itemmarks.config.title"));
-            title.alignment(Alignment.Center);
-            title.pos(0, 6);
-            title.size(200, 14);
-            title.shadow(false);
-            child(title);
+            child(GuiHelper.createTitle("itemmarks.config.title", 200, 6));
+
+            ButtonWidget<?> resetBtn = new ButtonWidget<>();
+            resetBtn.pos(200 - 18, 4);
+            resetBtn.size(14, 14);
+            resetBtn.overlay(IKey.str("§cR"));
+            resetBtn.onMousePressed(btn -> {
+                GuiHelper.openPanel(this, () -> new ResetConfirmPanel(parent));
+                return true;
+            });
+            child(resetBtn);
 
             TextWidget enabledLabel = new TextWidget(IKey.lang("itemmarks.config.enabled"));
             enabledLabel.pos(10, 24);
@@ -1106,6 +1076,104 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         @Override
         public boolean disablePanelsBelow() {
             return true;
+        }
+    }
+
+    public static class HelpPanel extends ModularPanel {
+
+        private static final int WIDTH = 160;
+        private static final int HEIGHT = 140;
+
+        public HelpPanel() {
+            super(nextPanelId("help"));
+            size(WIDTH, HEIGHT);
+            background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
+
+            TextWidget title = new TextWidget(IKey.lang("itemmarks.help.title"));
+            title.alignment(Alignment.Center);
+            title.pos(0, 6);
+            title.size(WIDTH, 10);
+            child(title);
+
+            child(ButtonWidget.panelCloseButton());
+
+            @SuppressWarnings("rawtypes")
+            ListWidget list = new ListWidget<>();
+            list.pos(6, 18);
+            list.size(WIDTH - 12, HEIGHT - 24);
+
+            addSection(list, "itemmarks.help.section.entry", "itemmarks.help.leftclick", "itemmarks.help.rightclick");
+
+            addSection(list, "itemmarks.help.section.nbt", "itemmarks.help.nbt.expand", "itemmarks.help.nbt.select");
+
+            addSection(
+                list,
+                "itemmarks.help.section.itemid",
+                "itemmarks.help.itemid.base",
+                "itemmarks.help.itemid.meta",
+                "itemmarks.help.itemid.any",
+                "itemmarks.help.itemid.empty");
+
+            addSection(
+                list,
+                "itemmarks.help.section.nbtpath",
+                "itemmarks.help.nbtpath.key",
+                "itemmarks.help.nbtpath.nested",
+                "itemmarks.help.nbtpath.index",
+                "itemmarks.help.nbtpath.any",
+                "itemmarks.help.nbtpath.wildcard",
+                "itemmarks.help.nbtpath.wildcardnest",
+                "itemmarks.help.nbtpath.empty");
+
+            addSection(
+                list,
+                "itemmarks.help.section.nbtvalue",
+                "itemmarks.help.nbtvalue.exact",
+                "itemmarks.help.nbtvalue.exists",
+                "itemmarks.help.nbtvalue.notexists",
+                "itemmarks.help.nbtvalue.multi");
+
+            child(list);
+        }
+
+        @SuppressWarnings("rawtypes")
+        private void addSection(ListWidget list, String titleKey, String... lineKeys) {
+            TextWidget sectionTitle = new TextWidget(IKey.lang(titleKey));
+            sectionTitle.alignment(Alignment.Center);
+            sectionTitle.left(0)
+                .right(0);
+            sectionTitle.maxWidth(WIDTH - 20);
+            list.child(sectionTitle);
+
+            for (String key : lineKeys) {
+                TextWidget line = new TextWidget(IKey.lang(key));
+                line.alignment(Alignment.CenterLeft);
+                line.left(0)
+                    .right(0);
+                line.maxWidth(WIDTH - 20);
+                list.child(line);
+            }
+
+            TextWidget spacer = new TextWidget(IKey.str(""));
+            spacer.left(0)
+                .right(0)
+                .height(6);
+            list.child(spacer);
+        }
+
+        @Override
+        public boolean isDraggable() {
+            return true;
+        }
+
+        @Override
+        public boolean closeOnOutOfBoundsClick() {
+            return false;
+        }
+
+        @Override
+        public boolean disablePanelsBelow() {
+            return false;
         }
     }
 }
