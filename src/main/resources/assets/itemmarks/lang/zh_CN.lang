@@ -6,6 +6,7 @@ key.categories.itemmarks=物品标记
 itemmarks.gui.title=管理物品标记
 itemmarks.gui.add=添加
 itemmarks.gui.fromhand=获取手持
+itemmarks.editor.fromhand.multiple=§7多个矿词条目，请手动输入
 
 # Entry Context Menu
 itemmarks.entry.ctx.dupe=复制
@@ -24,6 +25,11 @@ itemmarks.help.itemid.base=§1modid:item§8 - meta=0
 itemmarks.help.itemid.meta=§1modid:item:16§8 - meta=16
 itemmarks.help.itemid.any=§1modid:item:*§8 - 任意meta
 itemmarks.help.itemid.empty=§8(留空) - 仅NBT匹配
+itemmarks.help.section.oredict=§0[ 矿物词典 ]
+itemmarks.help.oredict.exact=§1ingotSteel§8 - 精确匹配
+itemmarks.help.oredict.prefix=§1ingot*§8 - 前缀匹配
+itemmarks.help.oredict.suffix=§1*Steel§8 - 后缀匹配
+itemmarks.help.oredict.contains=§1*gold*§8 - 包含匹配
 itemmarks.help.section.nbtpath=§0[ NBT路径语法 ]
 itemmarks.help.nbtpath.key=§1key§8 - 直接访问
 itemmarks.help.nbtpath.nested=§1key.sub§8 - 嵌套访问
@@ -41,13 +47,15 @@ itemmarks.help.nbtvalue.multi=§1a=1&b=2§8 - 多条件
 # Entry Editor
 itemmarks.editor.add=添加条目
 itemmarks.editor.edit=编辑条目
-itemmarks.editor.mark=标记：
-itemmarks.editor.itemid=物品ID：
-itemmarks.editor.nbtpath=NBT路径：
-itemmarks.editor.value=值：
+itemmarks.editor.mark=标记
+itemmarks.editor.itemid=物品ID
+itemmarks.editor.oredict=矿词
+itemmarks.editor.mode.itemid=按物品ID匹配
+itemmarks.editor.mode.oredict=按矿物词典匹配
+itemmarks.editor.nbtpath=NBT路径
+itemmarks.editor.value=NBT值
 itemmarks.editor.nbt=NBT…
-itemmarks.editor.cancel=取消
-itemmarks.editor.confirm=确认
+itemmarks.editor.confirm=保存
 
 # NBT Editor
 itemmarks.nbt.title=NBT选取器

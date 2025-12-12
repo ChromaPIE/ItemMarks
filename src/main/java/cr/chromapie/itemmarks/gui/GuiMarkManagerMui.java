@@ -17,8 +17,10 @@ import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.utils.Alignment;
 import com.cleanroommc.modularui.value.DoubleValue;
+import com.cleanroommc.modularui.value.IntValue;
 import com.cleanroommc.modularui.value.StringValue;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
+import com.cleanroommc.modularui.widgets.CycleButtonWidget;
 import com.cleanroommc.modularui.widgets.ListWidget;
 import com.cleanroommc.modularui.widgets.SliderWidget;
 import com.cleanroommc.modularui.widgets.TextWidget;
@@ -46,6 +48,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     private ModularPanel mainPanel;
     private ModularPanel currentEditorPanel;
     private String searchFilter = "";
+    private int highlightedEntryIndex = -1;
     private TextFieldWidget searchField;
 
     public GuiMarkManagerMui() {
@@ -54,6 +57,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
 
     @Override
     public ModularPanel buildUI(ModularGuiContext context) {
+        highlightedEntryIndex = -1;
         mainPanel = ModularPanel.defaultPanel("mark_manager", WIDTH, HEIGHT);
 
         mainPanel.child(GuiHelper.createTitle("itemmarks.gui.title", WIDTH, 6));
@@ -159,7 +163,10 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     }
 
     private boolean matchesFilter(MarkEntry entry, String filter) {
-        return entry.getItemId() != null && entry.getItemId()
+        if (entry.itemId() != null && entry.itemId()
+            .toLowerCase()
+            .contains(filter)) return true;
+        return entry.oreDict() != null && entry.oreDict()
             .toLowerCase()
             .contains(filter);
     }
@@ -174,16 +181,18 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     private IWidget buildEntryRow(MarkEntry entry, int index) {
         String text;
         if (entry.hasItemCondition()) {
-            text = String.format("[%s] %s", entry.getMark(), formatItemId(entry));
+            text = String.format("[%s] %s", entry.mark(), formatItemId(entry));
+        } else if (entry.hasOreDictCondition()) {
+            text = String.format("[%s] §d%s", entry.mark(), entry.oreDict());
         } else {
-            text = String.format("[%s] §7*", entry.getMark());
+            text = String.format("[%s] §7*", entry.mark());
         }
         if (entry.hasNbtCondition()) {
-            String path = entry.getNbtPath();
+            String path = entry.nbtPath();
             if (path == null || path.isEmpty()) {
-                text += String.format(" {%s}", entry.getNbtValue());
+                text += String.format(" {%s}", entry.nbtValue());
             } else {
-                text += String.format(" {%s=%s}", path, entry.getNbtValue());
+                text += String.format(" {%s=%s}", path, entry.nbtValue());
             }
         }
 
@@ -198,7 +207,8 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         btn.left(0);
         btn.right(0);
         btn.height(14);
-        btn.background(new Rectangle().setColor(0x00000000));
+        final boolean highlighted = index == highlightedEntryIndex;
+        btn.background(new Rectangle().setColor(highlighted ? 0x40FFFFFF : 0x00000000));
         btn.hoverBackground(new Rectangle().setColor(0x40FFFFFF));
         btn.overlay(
             IKey.str(text)
@@ -208,17 +218,23 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         btn.tooltipBuilder(tooltip -> {
             String markLabel = StatCollector.translateToLocal("itemmarks.editor.mark");
             String itemIdLabel = StatCollector.translateToLocal("itemmarks.editor.itemid");
+            String oreDictLabel = StatCollector.translateToLocal("itemmarks.editor.oredict");
             String nbtPathLabel = StatCollector.translateToLocal("itemmarks.editor.nbtpath");
             String valueLabel = StatCollector.translateToLocal("itemmarks.editor.value");
-            tooltip.addLine(IKey.str(String.format("§7%s §e%s", markLabel, entry.getMark())));
-            String itemId = entry.hasItemCondition() ? formatItemId(entry) : "§8*";
-            tooltip.addLine(IKey.str(String.format("§7%s §f%s", itemIdLabel, itemId)));
+            tooltip.addLine(IKey.str(String.format("§7%s §e%s", markLabel, entry.mark())));
+            if (entry.hasItemCondition()) {
+                tooltip.addLine(IKey.str(String.format("§7%s §f%s", itemIdLabel, formatItemId(entry))));
+            } else if (entry.hasOreDictCondition()) {
+                tooltip.addLine(IKey.str(String.format("§7%s §d%s", oreDictLabel, entry.oreDict())));
+            } else {
+                tooltip.addLine(IKey.str(String.format("§7%s §8*", itemIdLabel)));
+            }
             if (entry.hasNbtCondition()) {
-                String path = entry.getNbtPath();
+                String path = entry.nbtPath();
                 if (path != null && !path.isEmpty()) {
                     tooltip.addLine(IKey.str(String.format("§7%s §f%s", nbtPathLabel, path)));
                 }
-                tooltip.addLine(IKey.str(String.format("§7%s §f%s", valueLabel, entry.getNbtValue())));
+                tooltip.addLine(IKey.str(String.format("§7%s §f%s", valueLabel, entry.nbtValue())));
             }
         });
         btn.onMousePressed(mouseBtn -> {
@@ -239,15 +255,22 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     }
 
     private void openEntryContextMenu(int index, int mouseX, int mouseY) {
+        highlightedEntryIndex = index;
+        refreshEntryList();
         final GuiMarkManagerMui self = this;
         GuiHelper.openPanel(mainPanel, () -> new EntryContextMenu(self, index, mouseX, mouseY));
     }
 
+    public void clearHighlight() {
+        highlightedEntryIndex = -1;
+        refreshEntryList();
+    }
+
     private String formatItemId(MarkEntry entry) {
-        if (entry.getMeta() < 0) {
-            return entry.getItemId() + ":*";
+        if (entry.meta() < 0) {
+            return entry.itemId() + ":*";
         } else {
-            return entry.getItemId() + ":" + entry.getMeta();
+            return entry.itemId() + ":" + entry.meta();
         }
     }
 
@@ -267,7 +290,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         if (itemId == null) return;
 
         int meta = held.getItemDamage();
-        openEntryEditor(-1, new MarkEntry("", itemId, meta, null, null));
+        openEntryEditor(-1, new MarkEntry("", itemId, meta, null, null, null));
     }
 
     public void openEntryEditor(int idx, MarkEntry pf) {
@@ -280,15 +303,17 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         GuiHelper.openPanel(mainPanel, () -> panel);
     }
 
-    public void onEditorConfirm(int editIndex, String mark, String itemIdRaw, String nbtPath, String nbtValue) {
+    public void onEditorConfirm(int editIndex, String mark, String itemIdRaw, String oreDict, String nbtPath,
+        String nbtValue) {
         if (mark.isEmpty()) return;
         if (nbtPath != null && nbtPath.isEmpty()) nbtPath = null;
         if (nbtValue != null && nbtValue.isEmpty()) nbtValue = null;
-        if (itemIdRaw.isEmpty() && nbtValue == null) return;
+        if (oreDict != null && oreDict.isEmpty()) oreDict = null;
+        if (itemIdRaw.isEmpty() && oreDict == null && nbtValue == null) return;
 
         ParsedItemId parsed = parseItemId(itemIdRaw);
 
-        MarkEntry entry = new MarkEntry(mark, parsed.itemId(), parsed.meta(), nbtPath, nbtValue);
+        MarkEntry entry = new MarkEntry(mark, parsed.itemId(), parsed.meta(), oreDict, nbtPath, nbtValue);
 
         if (editIndex >= 0 && editIndex < MarkRegistry.getEntries()
             .size()) {
@@ -341,39 +366,45 @@ public class GuiMarkManagerMui extends CustomModularScreen {
 
     public static class EntryEditorPanel extends ModularPanel {
 
-        private static final int WIDTH = 240;
-        private static final int HEIGHT = 130;
+        private static final int WIDTH = 220;
+        private static final int HEIGHT = 126;
+        private static final int LEFT_WIDTH = 150;
 
-        private final GuiMarkManagerMui parent;
         private final int editIndex;
 
+        private int matchMode = 0;
         private String markText = "";
         private String itemIdText = "";
+        private String oreDictText = "";
         private String nbtPathText = "";
         private String nbtValueText = "";
 
         private final TextFieldWidget markField;
         private final TextFieldWidget itemIdField;
+        private final TextFieldWidget oreDictField;
         private final TextFieldWidget nbtPathField;
         private final TextFieldWidget nbtValueField;
 
         public EntryEditorPanel(GuiMarkManagerMui parent, int editIndex, MarkEntry prefill) {
             super(nextPanelId("entry_editor"));
-            this.parent = parent;
             this.editIndex = editIndex;
 
             if (prefill != null) {
-                this.markText = prefill.getMark() != null ? prefill.getMark() : "";
-                if (prefill.getItemId() != null && !prefill.getItemId()
+                this.markText = prefill.mark() != null ? prefill.mark() : "";
+                if (prefill.hasOreDictCondition()) {
+                    this.matchMode = 1;
+                    this.oreDictText = prefill.oreDict();
+                } else if (prefill.itemId() != null && !prefill.itemId()
                     .isEmpty()) {
-                    if (prefill.getMeta() < 0) {
-                        this.itemIdText = prefill.getItemId() + ":*";
-                    } else {
-                        this.itemIdText = prefill.getItemId() + ":" + prefill.getMeta();
+                        this.matchMode = 0;
+                        if (prefill.meta() < 0) {
+                            this.itemIdText = prefill.itemId() + ":*";
+                        } else {
+                            this.itemIdText = prefill.itemId() + ":" + prefill.meta();
+                        }
                     }
-                }
-                this.nbtPathText = prefill.getNbtPath() != null ? prefill.getNbtPath() : "";
-                this.nbtValueText = prefill.getNbtValue() != null ? prefill.getNbtValue() : "";
+                this.nbtPathText = prefill.nbtPath() != null ? prefill.nbtPath() : "";
+                this.nbtValueText = prefill.nbtValue() != null ? prefill.nbtValue() : "";
             }
 
             size(WIDTH, HEIGHT);
@@ -381,92 +412,108 @@ public class GuiMarkManagerMui extends CustomModularScreen {
 
             String titleKey = editIndex >= 0 ? "itemmarks.editor.edit" : "itemmarks.editor.add";
             child(GuiHelper.createTitle(titleKey, WIDTH, 6));
+            child(
+                ButtonWidget.panelCloseButton()
+                    .top(6)
+                    .right(6));
 
             final EntryEditorPanel self = this;
             int y = 22;
+            int labelX = 6;
+            int fieldX = 58;
+            int rightX = LEFT_WIDTH + 6;
+            int rightW = WIDTH - rightX - 6;
 
             TextWidget markLabel = new TextWidget(IKey.lang("itemmarks.editor.mark"));
-            markLabel.pos(6, y + 2);
-            markLabel.size(32, 14);
+            markLabel.pos(labelX, y + 2);
+            markLabel.size(fieldX - labelX, 14);
+            markLabel.alignment(Alignment.Center);
             markLabel.shadow(false);
             child(markLabel);
 
             markField = new TextFieldWidget();
             markField.value(new StringValue.Dynamic(() -> self.markText, val -> self.markText = val));
-            markField.pos(40, y);
-            markField.size(28, 16);
+            markField.pos(fieldX, y);
+            markField.size(40, 16);
             markField.setMaxLength(4);
             markField.setText(this.markText);
             child(markField);
 
-            TextWidget itemIdLabel = new TextWidget(IKey.lang("itemmarks.editor.itemid"));
-            itemIdLabel.pos(75, y + 2);
-            itemIdLabel.size(40, 14);
-            itemIdLabel.shadow(false);
-            child(itemIdLabel);
+            y += 20;
+
+            CycleButtonWidget modeBtn = new CycleButtonWidget();
+            modeBtn.pos(labelX, y);
+            modeBtn.size(fieldX - labelX, 16);
+            modeBtn.stateCount(2);
+            modeBtn.stateOverlay(0, IKey.lang("itemmarks.editor.itemid"));
+            modeBtn.stateOverlay(1, IKey.lang("itemmarks.editor.oredict"));
+            modeBtn.addTooltip(0, StatCollector.translateToLocal("itemmarks.editor.mode.itemid"));
+            modeBtn.addTooltip(1, StatCollector.translateToLocal("itemmarks.editor.mode.oredict"));
+            modeBtn.value(new IntValue.Dynamic(() -> self.matchMode, val -> {
+                self.matchMode = val;
+                self.updateMatchFields();
+            }));
+            child(modeBtn);
 
             itemIdField = new TextFieldWidget();
             itemIdField.value(new StringValue.Dynamic(() -> self.itemIdText, val -> self.itemIdText = val));
-            itemIdField.pos(115, y);
-            itemIdField.size(111, 16);
-            itemIdField.paddingRight(8);
+            itemIdField.pos(fieldX, y);
+            itemIdField.size(LEFT_WIDTH - fieldX, 16);
             itemIdField.setMaxLength(256);
             itemIdField.setText(this.itemIdText);
+            if (matchMode != 0) itemIdField.setEnabled(false);
             child(itemIdField);
 
-            y += 22;
-
-            TextWidget nbtPathLabel = new TextWidget(IKey.lang("itemmarks.editor.nbtpath"));
-            nbtPathLabel.pos(6, y + 2);
-            nbtPathLabel.size(50, 14);
-            nbtPathLabel.shadow(false);
-            child(nbtPathLabel);
-
-            nbtPathField = new TextFieldWidget();
-            nbtPathField.value(new StringValue.Dynamic(() -> self.nbtPathText, val -> self.nbtPathText = val));
-            nbtPathField.pos(58, y);
-            nbtPathField.size(76, 16);
-            nbtPathField.paddingRight(8);
-            nbtPathField.setMaxLength(256);
-            nbtPathField.setText(this.nbtPathText);
-            child(nbtPathField);
-
-            TextWidget nbtValueLabel = new TextWidget(IKey.lang("itemmarks.editor.value"));
-            nbtValueLabel.pos(140, y + 2);
-            nbtValueLabel.size(32, 14);
-            nbtValueLabel.shadow(false);
-            child(nbtValueLabel);
-
-            nbtValueField = new TextFieldWidget();
-            nbtValueField.value(new StringValue.Dynamic(() -> self.nbtValueText, val -> self.nbtValueText = val));
-            nbtValueField.pos(172, y);
-            nbtValueField.size(54, 16);
-            nbtValueField.paddingRight(8);
-            nbtValueField.setMaxLength(256);
-            nbtValueField.setText(this.nbtValueText);
-            child(nbtValueField);
-
-            y += 24;
+            oreDictField = new TextFieldWidget();
+            oreDictField.value(new StringValue.Dynamic(() -> self.oreDictText, val -> self.oreDictText = val));
+            oreDictField.pos(fieldX, y);
+            oreDictField.size(LEFT_WIDTH - fieldX, 16);
+            oreDictField.setMaxLength(256);
+            oreDictField.setText(this.oreDictText);
+            if (matchMode != 1) oreDictField.setEnabled(false);
+            child(oreDictField);
 
             ButtonWidget<?> fromHandBtn = new ButtonWidget<>();
-            fromHandBtn.pos(6, y);
-            fromHandBtn.size(65, 18);
+            fromHandBtn.pos(rightX, y);
+            fromHandBtn.size(rightW, 16);
             final String fromHandText = StatCollector.translateToLocal("itemmarks.gui.fromhand");
             fromHandBtn.overlay(IKey.dynamic(() -> {
-                boolean enabled = GuiHelper.hasHeldItem();
+                boolean enabled = isFromHandEnabled();
                 return enabled ? fromHandText : "§7" + fromHandText;
             }));
-            fromHandBtn.onUpdateListener(btn -> GuiHelper.applyButtonStyle(btn, GuiHelper.hasHeldItem()), true);
+            fromHandBtn.tooltipBuilder(tooltip -> {
+                if (matchMode == 1 && GuiHelper.hasHeldItem() && getHeldOreCount() > 1) {
+                    tooltip.addLine(IKey.lang("itemmarks.editor.fromhand.multiple"));
+                }
+            });
+            fromHandBtn.onUpdateListener(btn -> GuiHelper.applyButtonStyle(btn, isFromHandEnabled()), true);
             fromHandBtn.onMousePressed(btn -> {
-                if (!GuiHelper.hasHeldItem()) return true;
+                if (!isFromHandEnabled()) return true;
                 fillFromHand();
                 return true;
             });
             child(fromHandBtn);
 
+            y += 20;
+
+            TextWidget nbtPathLabel = new TextWidget(IKey.lang("itemmarks.editor.nbtpath"));
+            nbtPathLabel.pos(labelX, y + 2);
+            nbtPathLabel.size(fieldX - labelX, 14);
+            nbtPathLabel.alignment(Alignment.Center);
+            nbtPathLabel.shadow(false);
+            child(nbtPathLabel);
+
+            nbtPathField = new TextFieldWidget();
+            nbtPathField.value(new StringValue.Dynamic(() -> self.nbtPathText, val -> self.nbtPathText = val));
+            nbtPathField.pos(fieldX, y);
+            nbtPathField.size(LEFT_WIDTH - fieldX, 16);
+            nbtPathField.setMaxLength(256);
+            nbtPathField.setText(this.nbtPathText);
+            child(nbtPathField);
+
             ButtonWidget<?> nbtBtn = new ButtonWidget<>();
-            nbtBtn.pos(75, y);
-            nbtBtn.size(50, 18);
+            nbtBtn.pos(rightX, y);
+            nbtBtn.size(rightW, 16);
             final String nbtText = StatCollector.translateToLocal("itemmarks.editor.nbt");
             nbtBtn.overlay(IKey.dynamic(() -> {
                 boolean enabled = GuiHelper.heldItemHasNbt();
@@ -480,21 +527,29 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             });
             child(nbtBtn);
 
-            y += 24;
+            y += 20;
 
-            ButtonWidget<?> cancelBtn = new ButtonWidget<>();
-            cancelBtn.pos(WIDTH / 2 - 70, y);
-            cancelBtn.size(60, 18);
-            cancelBtn.overlay(IKey.lang("itemmarks.editor.cancel"));
-            cancelBtn.onMousePressed(btn -> {
-                closeIfOpen();
-                return true;
-            });
-            child(cancelBtn);
+            TextWidget nbtValueLabel = new TextWidget(IKey.lang("itemmarks.editor.value"));
+            nbtValueLabel.pos(labelX, y + 2);
+            nbtValueLabel.size(fieldX - labelX, 14);
+            nbtValueLabel.alignment(Alignment.Center);
+            nbtValueLabel.shadow(false);
+            child(nbtValueLabel);
+
+            nbtValueField = new TextFieldWidget();
+            nbtValueField.value(new StringValue.Dynamic(() -> self.nbtValueText, val -> self.nbtValueText = val));
+            nbtValueField.pos(fieldX, y);
+            nbtValueField.size(LEFT_WIDTH - fieldX, 16);
+            nbtValueField.setMaxLength(256);
+            nbtValueField.setText(this.nbtValueText);
+            child(nbtValueField);
+
+            y += 22;
 
             ButtonWidget<?> confirmBtn = new ButtonWidget<>();
-            confirmBtn.pos(WIDTH / 2 + 10, y);
-            confirmBtn.size(60, 18);
+            int saveW = 60;
+            confirmBtn.pos((WIDTH - saveW) / 2, y);
+            confirmBtn.size(saveW, 16);
             final String confirmText = StatCollector.translateToLocal("itemmarks.editor.confirm");
             confirmBtn.overlay(IKey.dynamic(() -> {
                 boolean enabled = isConfirmEnabled();
@@ -505,49 +560,88 @@ public class GuiMarkManagerMui extends CustomModularScreen {
                 if (!isConfirmEnabled()) return true;
                 String mark = markField.getText()
                     .trim();
-                String itemId = itemIdField.getText()
-                    .trim();
+                String itemId = matchMode == 0 ? itemIdField.getText()
+                    .trim() : "";
+                String oreDict = matchMode == 1 ? oreDictField.getText()
+                    .trim() : "";
                 String nbtPath = nbtPathField.getText()
                     .trim();
                 String nbtVal = nbtValueField.getText()
                     .trim();
-                parent.onEditorConfirm(editIndex, mark, itemId, nbtPath, nbtVal);
+                parent.onEditorConfirm(editIndex, mark, itemId, oreDict, nbtPath, nbtVal);
                 closeIfOpen();
                 return true;
             });
             child(confirmBtn);
+
+            updateMatchFields();
+        }
+
+        private void updateMatchFields() {
+            if (itemIdField != null) {
+                itemIdField.setEnabled(matchMode == 0);
+            }
+            if (oreDictField != null) {
+                oreDictField.setEnabled(matchMode == 1);
+            }
         }
 
         private boolean isConfirmEnabled() {
             String mark = markField.getText()
                 .trim();
-            String itemIdRaw = itemIdField.getText()
-                .trim();
+            String itemIdRaw = matchMode == 0 ? itemIdField.getText()
+                .trim() : "";
+            String oreDict = matchMode == 1 ? oreDictField.getText()
+                .trim() : "";
             String nbtPath = nbtPathField.getText()
                 .trim();
             String nbtVal = nbtValueField.getText()
                 .trim();
 
             if (mark.isEmpty()) return false;
-            if (itemIdRaw.isEmpty() && nbtVal.isEmpty()) return false;
+            if (itemIdRaw.isEmpty() && oreDict.isEmpty() && nbtVal.isEmpty()) return false;
 
             ParsedItemId parsed = parseItemId(itemIdRaw);
             String path = nbtPath.isEmpty() ? null : nbtPath;
             String value = nbtVal.isEmpty() ? null : nbtVal;
-            MarkEntry tempEntry = new MarkEntry(mark, parsed.itemId(), parsed.meta(), path, value);
+            String oreDictVal = oreDict.isEmpty() ? null : oreDict;
+            MarkEntry tempEntry = new MarkEntry(mark, parsed.itemId(), parsed.meta(), oreDictVal, path, value);
             return !MarkRegistry.isDuplicateExcluding(tempEntry, editIndex);
+        }
+
+        private boolean isFromHandEnabled() {
+            if (!GuiHelper.hasHeldItem()) return false;
+            if (matchMode == 0) return true;
+            int count = getHeldOreCount();
+            return count == 1;
+        }
+
+        private int getHeldOreCount() {
+            ItemStack held = GuiHelper.getHeldItem();
+            if (held == null) return 0;
+            return net.minecraftforge.oredict.OreDictionary.getOreIDs(held).length;
         }
 
         private void fillFromHand() {
             ItemStack held = GuiHelper.getHeldItem();
             if (held == null || held.getItem() == null) return;
-            String itemId = Item.itemRegistry.getNameForObject(held.getItem());
-            if (itemId == null) return;
-            int meta = held.getItemDamage();
-            String text = itemId + ":" + meta;
-            itemIdText = text;
-            if (itemIdField != null) {
-                itemIdField.setText(text);
+            if (matchMode == 0) {
+                String itemId = Item.itemRegistry.getNameForObject(held.getItem());
+                if (itemId == null) return;
+                int meta = held.getItemDamage();
+                String text = itemId + ":" + meta;
+                itemIdText = text;
+                if (itemIdField != null) {
+                    itemIdField.setText(text);
+                }
+            } else {
+                int[] oreIds = net.minecraftforge.oredict.OreDictionary.getOreIDs(held);
+                if (oreIds.length != 1) return;
+                String oreName = net.minecraftforge.oredict.OreDictionary.getOreName(oreIds[0]);
+                oreDictText = oreName;
+                if (oreDictField != null) {
+                    oreDictField.setText(oreName);
+                }
             }
         }
 
@@ -601,6 +695,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         private final List<NbtNode> nodes = new ArrayList<>();
         private final List<NbtNode> nodeCache = new ArrayList<>();
         private final ListWidget<IWidget, ?> nodeList;
+        private NbtNode highlightedNode = null;
 
         public NbtEditorPanelForEditor(EntryEditorPanel parent, ItemStack stack) {
             super(nextPanelId("nbt_editor"));
@@ -625,8 +720,15 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         }
 
         private void openContextMenu(NbtNode node, int mouseX, int mouseY) {
+            highlightedNode = node;
+            refreshNodeList();
             final NbtEditorPanelForEditor self = this;
             GuiHelper.openPanel(this, () -> new NbtContextMenu(self, node, mouseX, mouseY));
+        }
+
+        void clearHighlight() {
+            highlightedNode = null;
+            refreshNodeList();
         }
 
         void applyCondition(NbtNode node, int type) {
@@ -770,7 +872,8 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             btn.left(0);
             btn.right(0);
             btn.height(14);
-            btn.background(new Rectangle().setColor(0x00000000));
+            final boolean highlighted = node == highlightedNode;
+            btn.background(new Rectangle().setColor(highlighted ? 0x40FFFFFF : 0x00000000));
             btn.hoverBackground(new Rectangle().setColor(0x40FFFFFF));
             btn.overlay(
                 IKey.str(display)
@@ -815,8 +918,11 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         private static final int WIDTH = 70;
         private static final int HEIGHT = 54;
 
+        private final NbtEditorPanelForEditor parent;
+
         public NbtContextMenu(NbtEditorPanelForEditor parent, NbtNode node, int mouseX, int mouseY) {
             super(nextPanelId("nbt_ctx"));
+            this.parent = parent;
             size(WIDTH, HEIGHT);
             background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
 
@@ -836,6 +942,12 @@ public class GuiMarkManagerMui extends CustomModularScreen {
                 parent.applyCondition(node, 2);
                 closeIfOpen();
             }));
+        }
+
+        @Override
+        public void onClose() {
+            super.onClose();
+            parent.clearHighlight();
         }
 
         @Override
@@ -859,8 +971,11 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         private static final int WIDTH = 60;
         private static final int HEIGHT = 40;
 
+        private final GuiMarkManagerMui parent;
+
         public EntryContextMenu(GuiMarkManagerMui parent, int entryIndex, int mouseX, int mouseY) {
             super(nextPanelId("entry_ctx"));
+            this.parent = parent;
             size(WIDTH, HEIGHT);
             background(com.cleanroommc.modularui.drawable.GuiTextures.MC_BACKGROUND);
 
@@ -877,6 +992,12 @@ public class GuiMarkManagerMui extends CustomModularScreen {
                 parent.deleteEntry(entryIndex);
                 closeIfOpen();
             }));
+        }
+
+        @Override
+        public void onClose() {
+            super.onClose();
+            parent.clearHighlight();
         }
 
         @Override
@@ -1153,7 +1274,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     public static class HelpPanel extends ModularPanel {
 
         private static final int WIDTH = 160;
-        private static final int HEIGHT = 140;
+        private static final int HEIGHT = 180;
 
         public HelpPanel() {
             super(nextPanelId("help"));
@@ -1184,6 +1305,14 @@ public class GuiMarkManagerMui extends CustomModularScreen {
                 "itemmarks.help.itemid.meta",
                 "itemmarks.help.itemid.any",
                 "itemmarks.help.itemid.empty");
+
+            addSection(
+                list,
+                "itemmarks.help.section.oredict",
+                "itemmarks.help.oredict.exact",
+                "itemmarks.help.oredict.prefix",
+                "itemmarks.help.oredict.suffix",
+                "itemmarks.help.oredict.contains");
 
             addSection(
                 list,

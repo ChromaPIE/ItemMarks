@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.oredict.OreDictionary;
 
 public class MarkRegistry {
 
@@ -56,69 +57,56 @@ public class MarkRegistry {
         int meta = stack.getItemDamage();
         NBTTagCompound nbt = stack.getTagCompound();
 
-        // Priority 1: Item + NBT + Meta
         for (MarkEntry entry : entries) {
-            if (!entry.hasItemCondition()) continue;
-            if (itemId == null || !itemId.equals(entry.getItemId())) continue;
-            if (entry.hasNbtCondition() && entry.hasMetaCondition()) {
-                if (entry.getMeta() == meta && nbt != null && matchNbt(nbt, entry.getNbtPath(), entry.getNbtValue())) {
-                    return entry.getMark();
-                }
+            if (matchesEntry(entry, itemId, meta, nbt, stack)) {
+                return entry.mark();
             }
         }
-
-        // Priority 2: Item + NBT (any meta)
-        for (MarkEntry entry : entries) {
-            if (!entry.hasItemCondition()) continue;
-            if (itemId == null || !itemId.equals(entry.getItemId())) continue;
-            if (entry.hasNbtCondition() && !entry.hasMetaCondition()) {
-                if (nbt != null && matchNbt(nbt, entry.getNbtPath(), entry.getNbtValue())) {
-                    return entry.getMark();
-                }
-            }
-        }
-
-        // Priority 3: Item + Meta (no NBT)
-        for (MarkEntry entry : entries) {
-            if (!entry.hasItemCondition()) continue;
-            if (itemId == null || !itemId.equals(entry.getItemId())) continue;
-            if (!entry.hasNbtCondition() && entry.hasMetaCondition()) {
-                if (entry.getMeta() == meta) {
-                    return entry.getMark();
-                }
-            }
-        }
-
-        // Priority 4: Item only (no NBT, no meta)
-        for (MarkEntry entry : entries) {
-            if (!entry.hasItemCondition()) continue;
-            if (itemId == null || !itemId.equals(entry.getItemId())) continue;
-            if (!entry.hasNbtCondition() && !entry.hasMetaCondition()) {
-                return entry.getMark();
-            }
-        }
-
-        // Priority 5: NBT + Meta only (no item)
-        for (MarkEntry entry : entries) {
-            if (entry.hasItemCondition()) continue;
-            if (entry.hasNbtCondition() && entry.hasMetaCondition()) {
-                if (entry.getMeta() == meta && nbt != null && matchNbt(nbt, entry.getNbtPath(), entry.getNbtValue())) {
-                    return entry.getMark();
-                }
-            }
-        }
-
-        // Priority 6: NBT only (no item, no meta)
-        for (MarkEntry entry : entries) {
-            if (entry.hasItemCondition()) continue;
-            if (entry.hasNbtCondition() && !entry.hasMetaCondition()) {
-                if (nbt != null && matchNbt(nbt, entry.getNbtPath(), entry.getNbtValue())) {
-                    return entry.getMark();
-                }
-            }
-        }
-
         return null;
+    }
+
+    private static boolean matchesEntry(MarkEntry entry, String itemId, int meta, NBTTagCompound nbt, ItemStack stack) {
+        if (entry.hasItemCondition()) {
+            if (itemId == null || !itemId.equals(entry.itemId())) return false;
+            if (entry.hasMetaCondition() && entry.meta() != meta) return false;
+        } else if (entry.hasOreDictCondition()) {
+            if (!matchesOreDict(stack, entry.oreDict())) return false;
+        } else {
+            if (!entry.hasNbtCondition()) return false;
+        }
+        if (entry.hasNbtCondition()) {
+            return nbt != null && matchNbt(nbt, entry.nbtPath(), entry.nbtValue());
+        }
+        return true;
+    }
+
+    private static boolean matchesOreDict(ItemStack stack, String pattern) {
+        int[] oreIds = OreDictionary.getOreIDs(stack);
+        for (int oreId : oreIds) {
+            String oreName = OreDictionary.getOreName(oreId);
+            if (matchesWildcard(oreName, pattern)) return true;
+        }
+        return false;
+    }
+
+    private static boolean matchesWildcard(String value, String pattern) {
+        if (pattern.equals("*")) return true;
+        if (!pattern.contains("*")) return value.equals(pattern);
+        if (pattern.startsWith("*") && pattern.endsWith("*")) {
+            String inner = pattern.substring(1, pattern.length() - 1);
+            return value.contains(inner);
+        }
+        if (pattern.startsWith("*")) {
+            return value.endsWith(pattern.substring(1));
+        }
+        if (pattern.endsWith("*")) {
+            return value.startsWith(pattern.substring(0, pattern.length() - 1));
+        }
+        int starIdx = pattern.indexOf('*');
+        String prefix = pattern.substring(0, starIdx);
+        String suffix = pattern.substring(starIdx + 1);
+        return value.startsWith(prefix) && value.endsWith(suffix)
+            && value.length() >= prefix.length() + suffix.length();
     }
 
     private static boolean matchNbt(NBTTagCompound nbt, String path, String value) {
@@ -271,10 +259,11 @@ public class MarkRegistry {
         for (int i = 0; i < entries.size(); i++) {
             if (i == excludeIndex) continue;
             MarkEntry e = entries.get(i);
-            if (!strEquals(e.getItemId(), entry.getItemId())) continue;
-            if (e.getMeta() != entry.getMeta()) continue;
-            if (!strEquals(e.getNbtPath(), entry.getNbtPath())) continue;
-            if (!strEquals(e.getNbtValue(), entry.getNbtValue())) continue;
+            if (!strEquals(e.itemId(), entry.itemId())) continue;
+            if (e.meta() != entry.meta()) continue;
+            if (!strEquals(e.oreDict(), entry.oreDict())) continue;
+            if (!strEquals(e.nbtPath(), entry.nbtPath())) continue;
+            if (!strEquals(e.nbtValue(), entry.nbtValue())) continue;
             return true;
         }
         return false;

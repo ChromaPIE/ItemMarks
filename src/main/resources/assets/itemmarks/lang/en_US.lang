@@ -6,6 +6,7 @@ key.categories.itemmarks=Item Marks
 itemmarks.gui.title=Item Marks Manager
 itemmarks.gui.add=Add
 itemmarks.gui.fromhand=From Hand
+itemmarks.editor.fromhand.multiple=§7Multiple ore entries, input manually
 
 # Entry Context Menu
 itemmarks.entry.ctx.dupe=Dupe
@@ -24,6 +25,11 @@ itemmarks.help.itemid.base=§1modid:item§8 - meta=0
 itemmarks.help.itemid.meta=§1modid:item:16§8 - meta=16
 itemmarks.help.itemid.any=§1modid:item:*§8 - any meta
 itemmarks.help.itemid.empty=§8(empty) - NBT-only match
+itemmarks.help.section.oredict=§0[ Ore Dictionary ]
+itemmarks.help.oredict.exact=§1ingotSteel§8 - exact match
+itemmarks.help.oredict.prefix=§1ingot*§8 - starts with
+itemmarks.help.oredict.suffix=§1*Steel§8 - ends with
+itemmarks.help.oredict.contains=§1*gold*§8 - contains
 itemmarks.help.section.nbtpath=§0[ NBT Path Syntax ]
 itemmarks.help.nbtpath.key=§1key§8 - direct access
 itemmarks.help.nbtpath.nested=§1key.sub§8 - nested
@@ -41,13 +47,15 @@ itemmarks.help.nbtvalue.multi=§1a=1&b=2§8 - multi-condition
 # Entry Editor
 itemmarks.editor.add=Add Entry
 itemmarks.editor.edit=Edit Entry
-itemmarks.editor.mark=Mark:
-itemmarks.editor.itemid=Item ID:
-itemmarks.editor.nbtpath=NBT Path:
-itemmarks.editor.value=Value:
+itemmarks.editor.mark=Mark
+itemmarks.editor.itemid=Item ID
+itemmarks.editor.oredict=Ore Dict
+itemmarks.editor.mode.itemid=Match by Item ID
+itemmarks.editor.mode.oredict=Match by Ore Dictionary
+itemmarks.editor.nbtpath=NBT Path
+itemmarks.editor.value=NBT Value
 itemmarks.editor.nbt=NBT...
-itemmarks.editor.cancel=Cancel
-itemmarks.editor.confirm=Confirm
+itemmarks.editor.confirm=Save
 
 # NBT Editor
 itemmarks.nbt.title=NBT Picker

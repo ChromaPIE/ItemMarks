@@ -1,31 +1,17 @@
 package cr.chromapie.itemmarks.core;
 
-public class MarkEntry {
+import com.github.bsideup.jabel.Desugar;
 
-    private final String mark;
-    private final String itemId;
-    private final int meta;
-    private final String nbtPath;
-    private final String nbtValue;
+@Desugar
+public record MarkEntry(String mark, String itemId, int meta, String oreDict, String nbtPath, String nbtValue) {
 
-    public MarkEntry(String mark, String itemId, int meta, String nbtPath, String nbtValue) {
+    public MarkEntry(String mark, String itemId, int meta, String oreDict, String nbtPath, String nbtValue) {
         this.mark = mark != null && mark.length() > 4 ? mark.substring(0, 4) : mark;
         this.itemId = itemId;
         this.meta = meta;
+        this.oreDict = oreDict;
         this.nbtPath = nbtPath;
         this.nbtValue = nbtValue;
-    }
-
-    public String getMark() {
-        return mark;
-    }
-
-    public String getItemId() {
-        return itemId;
-    }
-
-    public int getMeta() {
-        return meta;
     }
 
     public boolean hasMetaCondition() {
@@ -36,12 +22,8 @@ public class MarkEntry {
         return itemId != null && !itemId.isEmpty();
     }
 
-    public String getNbtPath() {
-        return nbtPath;
-    }
-
-    public String getNbtValue() {
-        return nbtValue;
+    public boolean hasOreDictCondition() {
+        return oreDict != null && !oreDict.isEmpty();
     }
 
     public boolean hasNbtCondition() {
@@ -53,15 +35,13 @@ public class MarkEntry {
         sb.append(escapeField(mark))
             .append("|");
         sb.append(escapeField(itemId));
-        if (itemId != null && !itemId.isEmpty()) {
-            if (meta < 0) {
-                sb.append(":*");
-            } else if (meta > 0) {
-                sb.append(":")
-                    .append(meta);
-            }
+        if (itemId != null && !itemId.isEmpty() && meta >= 0) {
+            sb.append(":")
+                .append(meta);
         }
         sb.append("|");
+        sb.append(escapeField(oreDict))
+            .append("|");
         sb.append(escapeField(nbtPath))
             .append("|");
         sb.append(escapeField(nbtValue));
@@ -80,19 +60,32 @@ public class MarkEntry {
         if (lastColon > firstColon) {
             String metaPart = itemIdRaw.substring(lastColon + 1);
             itemId = itemIdRaw.substring(0, lastColon);
-            try {
-                meta = Integer.parseInt(metaPart);
-            } catch (NumberFormatException e) {
-                itemId = itemIdRaw;
+            if (!"*".equals(metaPart)) {
+                try {
+                    meta = Integer.parseInt(metaPart);
+                } catch (NumberFormatException e) {
+                    itemId = itemIdRaw;
+                }
             }
         } else {
             itemId = itemIdRaw;
         }
-        String nbtPath = parts.length > 2 ? unescapeField(parts[2]) : null;
-        String nbtValue = parts.length > 3 ? unescapeField(parts[3]) : null;
+        String oreDict;
+        String nbtPath;
+        String nbtValue;
+        if (parts.length >= 5) {
+            oreDict = unescapeField(parts[2]);
+            nbtPath = unescapeField(parts[3]);
+            nbtValue = unescapeField(parts[4]);
+        } else {
+            oreDict = null;
+            nbtPath = parts.length > 2 ? unescapeField(parts[2]) : null;
+            nbtValue = parts.length > 3 ? unescapeField(parts[3]) : null;
+        }
+        if (oreDict != null && oreDict.isEmpty()) oreDict = null;
         if (nbtPath != null && nbtPath.isEmpty()) nbtPath = null;
         if (nbtValue != null && nbtValue.isEmpty()) nbtValue = null;
-        return new MarkEntry(mark, itemId, meta, nbtPath, nbtValue);
+        return new MarkEntry(mark, itemId, meta, oreDict, nbtPath, nbtValue);
     }
 
     private static String escapeField(String s) {
