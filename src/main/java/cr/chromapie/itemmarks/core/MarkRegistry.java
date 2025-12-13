@@ -57,12 +57,30 @@ public class MarkRegistry {
         int meta = stack.getItemDamage();
         NBTTagCompound nbt = stack.getTagCompound();
 
+        MarkEntry best = null;
+        int bestScore = -1;
         for (MarkEntry entry : entries) {
             if (matchesEntry(entry, itemId, meta, nbt, stack)) {
-                return entry.mark();
+                int score = getMatchScore(entry);
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = entry;
+                }
             }
         }
-        return null;
+        return best != null ? best.mark() : null;
+    }
+
+    private static int getMatchScore(MarkEntry entry) {
+        if (entry.hasItemCondition()) {
+            return 10000 + (entry.hasNbtCondition() ? 100 : 0) + (entry.hasMetaCondition() ? 10 : 0);
+        }
+        if (entry.hasOreDictCondition()) {
+            String p = entry.oreDict();
+            int len = p.length() - (int) p.chars().filter(c -> c == '*').count();
+            return 1000 + len + (entry.hasNbtCondition() ? 100 : 0);
+        }
+        return entry.hasNbtCondition() ? 100 : 0;
     }
 
     private static boolean matchesEntry(MarkEntry entry, String itemId, int meta, NBTTagCompound nbt, ItemStack stack) {

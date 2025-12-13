@@ -268,7 +268,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
 
     private String formatItemId(MarkEntry entry) {
         if (entry.meta() < 0) {
-            return entry.itemId() + ":*";
+            return entry.itemId();
         } else {
             return entry.itemId() + ":" + entry.meta();
         }
@@ -398,7 +398,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
                     .isEmpty()) {
                         this.matchMode = 0;
                         if (prefill.meta() < 0) {
-                            this.itemIdText = prefill.itemId() + ":*";
+                            this.itemIdText = prefill.itemId();
                         } else {
                             this.itemIdText = prefill.itemId() + ":" + prefill.meta();
                         }
@@ -800,7 +800,9 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             java.util.Set<String> keys = compound.func_150296_c();
             for (String key : keys) {
                 net.minecraft.nbt.NBTBase tag = compound.getTag(key);
-                String path = pathPrefix.isEmpty() ? key : pathPrefix + "." + key;
+                String escapedKey = key.replace("\\", "\\\\")
+                    .replace(".", "\\.");
+                String path = pathPrefix.isEmpty() ? escapedKey : pathPrefix + "." + escapedKey;
                 NbtNode node = findOrCreateNode(key, tag, path, null, depth, false);
                 nodes.add(node);
                 if (node.expanded) {

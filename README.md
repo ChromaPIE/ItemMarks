@@ -1,226 +1,106 @@
 # Item Marks
 
-A Minecraft 1.7.10 mod that allows players to display custom marks on item icons for quick identification of specific items.
+A Minecraft 1.7.10 mod for displaying custom marks on item icons.
 
 ## Features
 
-- Render 1-2 character custom marks on item icons
-- Match items by Item ID, metadata (Meta), and NBT data
-- Support NBT-only matching (no Item ID required) to match different items with the same NBT structure
-- Visual GUI management interface
-- Configurable mark position and size
+- 1-4 character marks on items
+- Match by Item ID, Ore Dictionary (with wildcards), or NBT
+- Adaptive sizing for longer marks
+- GUI manager with search and NBT picker
 
 ## Installation
 
-1. Ensure Minecraft Forge 1.7.10 is installed
-2. Ensure [ModularUI2](https://github.com/GTNewHorizons/ModularUI2) dependency is installed
-3. Place the mod JAR file into the `mods` folder
+1. Install Minecraft Forge 1.7.10
+2. Install [ModularUI2](https://github.com/GTNewHorizons/ModularUI2)
+3. Place mod JAR in `mods` folder
 
-## Usage
+## Quick Start
 
-### Opening the Manager
+Press **M** to open the manager. Click **Add** or **From Hand** to create entries.
 
-Press **M** key (configurable in Controls settings) to open the Item Marks Manager.
+## Matching Rules
 
-### Manager Interface Layout
+### Item ID
 
-```
-┌──────────────────────────────────────────┐
-│ [C]      Item Marks Manager      [?] │
-├──────────────────────────────────────────┤
-│                                      │
-│  Entry List (newest at top)          │
-│  [Mark] ItemID:Meta {NBT Condition}  │
-│                                      │
-├──────────────────────────────────────────┤
-│ [Add] [From Hand]    [🔍 Search...] │
-└──────────────────────────────────────────┘
-```
+| Format          | Matches          |
+|-----------------|------------------|
+| `modid:item`    | Any metadata     |
+| `modid:item:16` | Metadata 16 only |
 
-- **C Button**: Open configuration panel
-- **? Button**: Open help panel
-- **Add**: Create a new mark entry (appears at top of list)
-- **From Hand**: Get Item ID from held item and create new entry
-- **Search**: Real-time filter entries by Item ID
+### Ore Dictionary
 
-### Configuration Panel
+| Pattern      | Matches     |
+|--------------|-------------|
+| `ingotSteel` | Exact name  |
+| `ingot*`     | Starts with |
+| `*Steel`     | Ends with   |
+| `*gold*`     | Contains    |
 
-- **R Button** (top right): Reset all entries (requires confirmation)
-- **Enabled**: Toggle mark rendering on/off
-- **Position**: Cycle through mark positions (Top-Left, Top-Right, Bottom-Left, Bottom-Right)
-- **Scale**: Adjust mark size (50% - 300%)
+Longer patterns take priority over shorter ones.
 
-### Entry List Operations
+### NBT Path
 
-- **Left-click**: Edit entry
-- **Right-click**: Open context menu
-  - **Dupe**: Create new entry with same content (for creating variations)
-  - **Delete**: Delete entry
+| Syntax    | Example        |
+|-----------|----------------|
+| `key`     | `Damage`       |
+| `key.sub` | `display.Name` |
+| `list[0]` | First element  |
+| `list[*]` | Any element    |
+| `*`       | Any key        |
+| `*.sub`   | Any key's sub  |
 
-## Entry Editor
+### NBT Value
 
-### Field Descriptions
+| Value     | Meaning         |
+|-----------|-----------------|
+| `123`     | Exact match     |
+| `*`       | Field exists    |
+| `!`       | Field missing   |
+| `a=1&b=2` | Multi-condition |
 
-| Field         | Description                          | Examples                  |
-|---------------|--------------------------------------|---------------------------|
-| **Mark**      | 1-2 characters displayed on the item | `A`, `★`, `01`            |
-| **Item ID**   | Minecraft item registry name         | `minecraft:diamond_sword` |
-| **NBT Path**  | Path to access NBT data              | `tag.display.Name`        |
-| **NBT Value** | Expected value to match              | `123`, `*`, `!`           |
+## Priority
 
-### Item ID Format
-
-| Format          | Description                             |
-|-----------------|-----------------------------------------|
-| `modid:item`    | Match item with metadata 0              |
-| `modid:item:16` | Match item with metadata 16             |
-| `modid:item:*`  | Match item with any metadata            |
-| *(empty)*       | No item restriction (NBT-only matching) |
-
-### NBT Path Syntax
-
-| Syntax      | Description                            | Example          |
-|-------------|----------------------------------------|------------------|
-| `key`       | Direct access to root-level key        | `Damage`         |
-| `key.sub`   | Access nested key                      | `display.Name`   |
-| `list[0]`   | Access first element of list           | `ench[0]`        |
-| `list[*]`   | Match any element in list              | `ench[*]`        |
-| `*`         | Match any key at current level         | `*`              |
-| `*.sub`     | Match any key's nested field           | `*.FluidName`    |
-| `foo.*.bar` | Wildcard in middle of path             | `Tanks.*.Amount` |
-| *(empty)*   | Multi-condition matching at root level | -                |
-
-### NBT Value Matching
-
-| Value     | Description                                                    |
-|-----------|----------------------------------------------------------------|
-| `123`     | Exact match (auto-strips type suffixes s/b/l/f/d)              |
-| `*`       | Match if field exists                                          |
-| `!`       | Match if field does not exist                                  |
-| `a=1&b=2` | Multi-condition matching (at root level or when path is empty) |
-
-### NBT Picker
-
-Click **NBT...** button to open the NBT Picker (requires holding an item with NBT data):
-
-- Visual display of item's NBT structure
-- **Left-click** `[+]/[-]` to expand/collapse compound tags
-- **Right-click** on a field to select an action:
-  - **= Value**: Match the field's current value
-  - **Exists (\*)**: Match if field exists
-  - **Not (!)**: Match if field does not exist
-
-The NBT Picker is draggable and does not block interaction with the editor window below.
+1. Item ID + NBT + Meta
+2. Item ID + NBT
+3. Item ID + Meta
+4. Item ID only
+5. Ore Dict + NBT (longer wins)
+6. Ore Dict only (longer wins)
+7. NBT only
 
 ## Configuration
 
-Click the **C** button in the manager to open the configuration panel:
+| Option        | Default  |
+|---------------|----------|
+| Display Marks | ON       |
+| Position      | Top Left |
+| Scale         | 100%     |
+| Adaptive Size | ON       |
 
-| Option            | Description                     | Default  |
-|-------------------|---------------------------------|----------|
-| **Display Marks** | Enable/disable mark rendering   | ON       |
-| **Mark Position** | Position of mark on item icon   | Top Left |
-| **Mark Scale**    | Scale ratio of marks (50%-300%) | 100%     |
+Positions: Top Left, Top Right, Bottom Left, Middle
 
-### Mark Position Options
+## Files
 
-- **Top Left**: Mark displays at top-left corner of item icon
-- **Top Right**: Mark displays at top-right corner of item icon
-- **Bottom Left**: Mark displays at bottom-left corner of item icon
-- **Middle**: Mark displays at center of item icon
+| File                    | Content    |
+|-------------------------|------------|
+| `itemmarks.txt`         | Entry data |
+| `itemmarks_config.json` | Settings   |
 
-## Match Priority
+Entry format: `Mark|ItemID:Meta|OreDict|NBTPath|NBTValue`
 
-When multiple entries could match the same item, the following priority is used:
+## Examples
 
-1. **Item + NBT + Meta** (most specific)
-2. **Item + NBT** (any metadata)
-3. **Item + Meta** (no NBT condition)
-4. **Item only** (no NBT, no meta restriction)
-5. **NBT + Meta** (no item restriction)
-6. **NBT only** (no item, no meta restriction)
-
-## Configuration Files
-
-Mod configuration is stored in the Minecraft config directory:
-
-| File                    | Content                                       |
-|-------------------------|-----------------------------------------------|
-| `itemmarks.txt`         | Mark entry data                               |
-| `itemmarks_config.json` | Mod settings (position, scale, enabled state) |
-
-### Entry File Format
-
-One entry per line, format:
-```
-Mark|ItemID:Meta|NBTPath|NBTValue
-```
-
-Examples:
-```
-★|minecraft:diamond_sword:*||
-A|minecraft:potion:0|Potion|minecraft:strength
-!|gtceu:electric_item:*|Charge|!
-```
-
-## Usage Examples
-
-### Example 1: Mark All Diamond Swords
-
-- Mark: `◇`
-- Item ID: `minecraft:diamond_sword:*`
-- NBT Path: *(empty)*
-- NBT Value: *(empty)*
-
-### Example 2: Mark Enchanted Items
-
-- Mark: `E`
-- Item ID: *(empty)*
-- NBT Path: `ench`
-- NBT Value: `*`
-
-### Example 3: Mark Specific Potion
-
-- Mark: `S`
-- Item ID: `minecraft:potion:0`
-- NBT Path: `Potion`
-- NBT Value: `minecraft:strength`
-
-### Example 4: Mark Uncharged Electric Items
-
-- Mark: `!`
-- Item ID: *(empty)*
-- NBT Path: `Charge`
-- NBT Value: `!`
-
-### Example 5: Multi-Condition Matching
-
-- Mark: `OK`
-- Item ID: `modid:machine:0`
-- NBT Path: *(empty)*
-- NBT Value: `active=1&energy=*`
-
-### Example 6: Wildcard Path Matching (e.g., Fluid Tanks)
-
-- Mark: `O₂`
-- Item ID: *(empty)*
-- NBT Path: `*.FluidName`
-- NBT Value: `oxygen`
-
-This matches any item where any root-level NBT key contains a `FluidName` field with value `oxygen`.
-
-## Key Bindings
-
-| Action          | Function               | Default |
-|-----------------|------------------------|---------|
-| Open Item Marks | Open manager interface | M       |
-
-Configurable in Game Settings → Controls → Item Marks category.
+| Mark | Item ID             | Ore Dict  | NBT Path | NBT Value | Description        |
+|------|---------------------|-----------|----------|-----------|--------------------|
+| `D`  | `minecraft:diamond` |           |          |           | All diamond swords |
+| `E`  |                     |           | `ench`   | `*`       | Enchanted items    |
+| `Cu` |                     | `*Copper` |          |           | Any copper items   |
+| `!`  |                     |           | `Charge` | `!`       | Uncharged items    |
 
 ## Dependencies
 
-- Minecraft 1.7.10
-- Forge
+- Minecraft 1.7.10 + Forge
 - ModularUI2
 
 ## License
