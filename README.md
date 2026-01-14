@@ -30,14 +30,15 @@ Press **M** to open the manager. Click **Add** or **From Hand** to create entrie
 
 ### Ore Dictionary
 
-| Pattern      | Matches     |
-|--------------|-------------|
-| `ingotSteel` | Exact name  |
-| `ingot*`     | Starts with |
-| `*Steel`     | Ends with   |
-| `*gold*`     | Contains    |
+| Pattern            | Matches                    |
+|--------------------|----------------------------|
+| `ingotSteel`       | Exact name                 |
+| `ingot*`           | Starts with                |
+| `*Steel`           | Ends with                  |
+| `*gold*`           | Contains                   |
+| `ingot*\|dust*`    | OR: ingot* or dust*        |
 
-Longer patterns take priority over shorter ones.
+Longer patterns take priority; wildcards reduce priority.
 
 ### NBT Path
 
@@ -61,13 +62,15 @@ Longer patterns take priority over shorter ones.
 
 ## Priority
 
-1. Item ID + NBT + Meta
-2. Item ID + NBT
-3. Item ID + Meta
-4. Item ID only
-5. Ore Dict + NBT (longer wins)
-6. Ore Dict only (longer wins)
-7. NBT only
+Score-based matching (higher wins):
+
+| Condition | Base Score | Modifiers                            |
+|-----------|------------|--------------------------------------|
+| Item ID   | 10000      | +500 NBT, +10 Meta                   |
+| Ore Dict  | 1000       | +length, -100 per wildcard, +500 NBT |
+| NBT only  | 500        |                                      |
+
+For OR patterns (`a|b`), the lowest-scoring pattern determines the score.
 
 ## Configuration
 
@@ -91,12 +94,13 @@ Entry format: `Mark|ItemID:Meta|OreDict|NBTPath|NBTValue`
 
 ## Examples
 
-| Mark | Item ID             | Ore Dict  | NBT Path | NBT Value | Description        |
-|------|---------------------|-----------|----------|-----------|--------------------|
-| `D`  | `minecraft:diamond` |           |          |           | All diamond swords |
-| `E`  |                     |           | `ench`   | `*`       | Enchanted items    |
-| `Cu` |                     | `*Copper` |          |           | Any copper items   |
-| `!`  |                     |           | `Charge` | `!`       | Uncharged items    |
+| Mark | Item ID             | Ore Dict        | NBT Path | NBT Value | Description      |
+|------|---------------------|-----------------|----------|-----------|------------------|
+| `D`  | `minecraft:diamond` |                 |          |           | All diamonds     |
+| `E`  |                     |                 | `ench`   | `*`       | Enchanted items  |
+| `Cu` |                     | `*Copper`       |          |           | Any copper items |
+| `M`  |                     | `ingot*\|dust*` |          |           | Ingots or dusts  |
+| `!`  |                     |                 | `Charge` | `!`       | Uncharged items  |
 
 ## Dependencies
 

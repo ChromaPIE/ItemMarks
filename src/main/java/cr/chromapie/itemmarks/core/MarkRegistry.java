@@ -73,14 +73,23 @@ public class MarkRegistry {
 
     private static int getMatchScore(MarkEntry entry) {
         if (entry.hasItemCondition()) {
-            return 10000 + (entry.hasNbtCondition() ? 100 : 0) + (entry.hasMetaCondition() ? 10 : 0);
+            return 10000 + (entry.hasNbtCondition() ? 500 : 0) + (entry.hasMetaCondition() ? 10 : 0);
         }
         if (entry.hasOreDictCondition()) {
-            String p = entry.oreDict();
-            int len = p.length() - (int) p.chars().filter(c -> c == '*').count();
-            return 1000 + len + (entry.hasNbtCondition() ? 100 : 0);
+            int nbtBonus = entry.hasNbtCondition() ? 500 : 0;
+            int minScore = Integer.MAX_VALUE;
+            for (String p : entry.oreDict()
+                .split("\\|")) {
+                p = p.trim();
+                int wildcardCount = (int) p.chars()
+                    .filter(c -> c == '*')
+                    .count();
+                int score = 1000 + p.length() - wildcardCount * 100;
+                if (score < minScore) minScore = score;
+            }
+            return minScore + nbtBonus;
         }
-        return entry.hasNbtCondition() ? 100 : 0;
+        return entry.hasNbtCondition() ? 500 : 0;
     }
 
     private static boolean matchesEntry(MarkEntry entry, String itemId, int meta, NBTTagCompound nbt, ItemStack stack) {
@@ -100,9 +109,12 @@ public class MarkRegistry {
 
     private static boolean matchesOreDict(ItemStack stack, String pattern) {
         int[] oreIds = OreDictionary.getOreIDs(stack);
+        String[] patterns = pattern.split("\\|");
         for (int oreId : oreIds) {
             String oreName = OreDictionary.getOreName(oreId);
-            if (matchesWildcard(oreName, pattern)) return true;
+            for (String p : patterns) {
+                if (matchesWildcard(oreName, p.trim())) return true;
+            }
         }
         return false;
     }
