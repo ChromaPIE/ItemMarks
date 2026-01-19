@@ -9,6 +9,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.StatCollector;
 
 import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.api.layout.IViewportStack;
 import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.drawable.GuiTextures;
 import com.cleanroommc.modularui.drawable.Rectangle;
@@ -16,6 +17,7 @@ import com.cleanroommc.modularui.screen.CustomModularScreen;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.utils.Alignment;
+import com.cleanroommc.modularui.utils.HoveredWidgetList;
 import com.cleanroommc.modularui.value.DoubleValue;
 import com.cleanroommc.modularui.value.IntValue;
 import com.cleanroommc.modularui.value.StringValue;
@@ -83,7 +85,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
         mainPanel.child(helpBtn);
 
         int listHeight = HEIGHT - LIST_Y - 30;
-        entryList = new ListWidget<>();
+        entryList = new ScrollFixListWidget();
         entryList.pos(PADDING, LIST_Y);
         entryList.size(WIDTH - PADDING * 2, listHeight);
         entryList.background(new Rectangle().setColor(0x80000000));
@@ -362,6 +364,18 @@ public class GuiMarkManagerMui extends CustomModularScreen {
     @Override
     public boolean doesPauseGame() {
         return false;
+    }
+
+    private static class ScrollFixListWidget extends ListWidget<IWidget, ScrollFixListWidget> {
+
+        @Override
+        public void getWidgetsAt(IViewportStack stack, HoveredWidgetList widgets, int x, int y) {
+            int localX = stack.unTransformX(x, y);
+            int localY = stack.unTransformY(x, y);
+            if (widgets.peek() == this && !getScrollArea().isInsideScrollbarArea(localX, localY)) {
+                super.getWidgetsAt(stack, widgets, x, y);
+            }
+        }
     }
 
     public static class EntryEditorPanel extends ModularPanel {
@@ -708,7 +722,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             child(GuiHelper.createTitle("itemmarks.nbt.title", WIDTH, 6));
             child(ButtonWidget.panelCloseButton());
 
-            nodeList = new ListWidget<>();
+            nodeList = new ScrollFixListWidget();
             nodeList.pos(6, 24);
             nodeList.size(WIDTH - 12, HEIGHT - 30);
             nodeList.background(new Rectangle().setColor(0x80000000));
@@ -1292,7 +1306,7 @@ public class GuiMarkManagerMui extends CustomModularScreen {
             child(ButtonWidget.panelCloseButton());
 
             @SuppressWarnings("rawtypes")
-            ListWidget list = new ListWidget<>();
+            ListWidget list = new ScrollFixListWidget();
             list.pos(6, 18);
             list.size(WIDTH - 12, HEIGHT - 24);
 
